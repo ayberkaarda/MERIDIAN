@@ -2,7 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  // Software WebGL causes CPU contention when projects run in parallel.
+  workers: 1,
+  fullyParallel: false,
   reporter: "list",
   use: {
     baseURL: "http://localhost:3000",

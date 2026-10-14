@@ -1,0 +1,79 @@
+/*
+ * Typographic objects shared by sections: split display headlines, editorial
+ * serif statements and mono metadata lines. Sizes come from tokens.css.
+ */
+
+@layer components {
+  /* Split display headline */
+  .split-headline {
+    margin: 0;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--font-display-mobile-size);
+    font-weight: 500;
+    line-height: var(--font-display-leading);
+    letter-spacing: var(--font-display-tracking);
+    text-transform: uppercase;
+    font-kerning: normal;
+  }
+
+  /* SplitText line masks: clip each rising line, keep descenders/diacritics. */
+  .split-headline > div {
+    padding-block-end: 0.06em;
+    margin-block-end: -0.06em;
+  }
+
+  .split-headline__line {
+    will-change: transform;
+  }
+
+  @media (width >= 48rem) {
+    .split-headline {
+      font-size: var(--font-display-size);
+    }
+  }
+
+  /* Editorial serif statement */
+  /* Set here, not via the type-editorial utility, so sections can rescale it per breakpoint. */
+  .editorial-statement {
+    margin: 0;
+    font-family: var(--font-instrument-serif), ui-serif, Georgia, serif;
+    font-size: var(--font-editorial-size);
+    line-height: var(--font-editorial-leading);
+    letter-spacing: -0.01em;
+    font-weight: 400;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .editorial-statement__line {
+    display: block;
+    overflow: clip;
+    overflow-clip-margin: 0.08em;
+    padding-block: 0.04em;
+    color: var(--ink-light);
+    transition: color var(--motion-m, 0.8s) var(--ease-reveal, ease-out);
+  }
+
+  .editorial-statement__line[data-state="past"] {
+    color: var(--muted);
+  }
+
+  .editorial-statement__text {
+    display: inline-block;
+    will-change: transform, opacity;
+  }
+
+  /* Mono metadata */
+  .mono-meta {
+    margin: 0;
+    color: var(--theme-muted);
+  }
+
+  .mono-meta__separator {
+    opacity: 0.6;
+  }
+
+  .mono-meta__item {
+    white-space: nowrap;
+  }
+}

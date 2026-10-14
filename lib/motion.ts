@@ -1,3 +1,5 @@
+// Wall-clock loading budget; leaves room for the preloader exit within 5 seconds.
+export const LOADING_TIMEOUT_MS = 2000;
 export const durations = { xs: 0.2, s: 0.4, m: 0.8, l: 1.4, xl: 2.4 } as const;
 export const easings = { reveal: 'expo.out', camera: 'power2.inOut', scrub: 'none' } as const;
 export const motion = { durations, easings, headlineStagger: 0.12 } as const;

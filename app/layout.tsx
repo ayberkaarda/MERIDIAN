@@ -7,6 +7,8 @@ import { Cursor } from "@/components/ui/Cursor";
 import { Nav } from "@/components/ui/Nav";
 import { ProgressRail } from "@/components/ui/ProgressRail";
 import { copy } from "@/data/copy";
+import { SceneMount } from "@/components/canvas/SceneMount";
+import { SceneScrollBridge } from "@/hooks/SceneScrollBridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,11 +44,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-full">
         <a href="#main" className="skip-link">{copy.navigation.skipLink}</a>
         <AppProviders>
+          <SceneScrollBridge />
+          <SceneMount />
           <Preloader />
           <Cursor />
           <Nav />
           <ProgressRail />
-          {children}
+          <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
         </AppProviders>
       </body>
     </html>

@@ -1,0 +1,21 @@
+/*
+ * Static vignette for mid/low tiers, where the WebGL grain/vignette overlay is
+ * not drawn. Approximates grain.frag: smoothstep(0.45, 1.1) on the normalised
+ * radius, 0.5 strength. Composited once by the browser, no per-frame shading.
+ * Render as an aria-hidden sibling directly after the scene canvas, only when
+ * tier !== 'high'.
+ */
+.scene-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse farthest-corner at 50% 50%,
+    transparent 0%,
+    transparent 45%,
+    rgb(0 0 0 / 0.12) 65%,
+    rgb(0 0 0 / 0.32) 85%,
+    rgb(0 0 0 / 0.45) 100%
+  );
+}

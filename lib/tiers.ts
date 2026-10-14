@@ -1,4 +1,7 @@
 export type DeviceTier = 'high' | 'mid' | 'low';
+export function getTierDpr(tier: DeviceTier): number | [number, number] {
+  return tier === 'high' ? [1, 2] : tier === 'mid' ? 1.5 : 1;
+}
 export interface DeviceSignals {
   dpr: number;
   cores: number;
