@@ -1,0 +1,587 @@
+/*
+ * Persistent interface chrome: preloader, cursor, header, menu overlay, progress rail, magnetic button.
+ * Durations and easings arrive as --motion-* / --ease-* custom properties set from lib/motion.ts
+ * on each component root, so this sheet never defines its own timing.
+ * Transform transitions are dropped under reduced motion; opacity and colour changes remain.
+ */
+
+@layer components {
+  /* Preloader */
+  .preloader {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-preloader);
+    overflow: hidden;
+    color: var(--ink-light);
+  }
+
+  .preloader__plane {
+    position: absolute;
+    inset-inline: 0;
+    background-color: var(--bg-dark);
+    will-change: transform;
+  }
+
+  .preloader__plane--top {
+    top: 0;
+    /* Overlaps the seam by a pixel so no light leaks before the split. */
+    height: calc(50% + 1px);
+  }
+
+  .preloader__plane--bottom {
+    bottom: 0;
+    height: 50%;
+  }
+
+  .preloader__seam {
+    position: absolute;
+    top: 50%;
+    left: var(--gutter);
+    right: var(--gutter);
+    height: var(--hairline);
+    background-color: currentColor;
+    pointer-events: none;
+  }
+
+  .preloader__wordmark {
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(50% + var(--space-4));
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    transform-origin: 50% 100%;
+    will-change: transform, opacity;
+  }
+
+  .preloader__meta {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--gutter);
+    right: var(--gutter);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--muted);
+  }
+
+  .preloader__meta > :last-child {
+    color: var(--ink-light);
+  }
+
+  /* Cursor */
+  .cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--z-cursor);
+    color: var(--ink-light);
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+
+  .cursor__dot,
+  .cursor__follower {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+  }
+
+  .cursor__dot,
+  .cursor__ring {
+    border-radius: 50%;
+  }
+
+  .cursor__ring {
+    position: absolute;
+  }
+
+  .cursor__dot {
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+    background-color: currentColor;
+  }
+
+  .cursor__ring {
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: var(--hairline) solid currentColor;
+  }
+
+  .cursor__label {
+    position: absolute;
+    top: 0;
+    left: 32px;
+    white-space: nowrap;
+    transform: translateY(-50%);
+  }
+
+  @media (pointer: coarse) {
+    .cursor {
+      display: none;
+    }
+  }
+
+  /* Header */
+  .site-header {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: var(--z-nav);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    padding-inline: var(--gutter);
+    color: var(--ink-light);
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+
+  .site-header > * {
+    pointer-events: auto;
+  }
+
+  .site-header__wordmark {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-decoration: none;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .nav-toggle__glyph {
+    position: relative;
+    width: 20px;
+    height: 7px;
+  }
+
+  .nav-toggle__glyph::before,
+  .nav-toggle__glyph::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--hairline);
+    background-color: currentColor;
+    transform-origin: right center;
+    transition: transform var(--motion-s) var(--ease-reveal);
+  }
+
+  .nav-toggle__glyph::before {
+    top: 0;
+  }
+
+  .nav-toggle__glyph::after {
+    bottom: 0;
+  }
+
+  .nav-toggle__glyph--close {
+    width: 14px;
+    height: 14px;
+  }
+
+  .nav-toggle__glyph--close::before,
+  .nav-toggle__glyph--close::after {
+    top: 50%;
+    bottom: auto;
+    transform-origin: center;
+  }
+
+  .nav-toggle__glyph--close::before {
+    transform: rotate(45deg);
+  }
+
+  .nav-toggle__glyph--close::after {
+    transform: rotate(-45deg);
+  }
+
+  @media (hover: hover) {
+    .nav-toggle:hover .nav-toggle__glyph:not(.nav-toggle__glyph--close)::after {
+      transform: scaleX(0.5);
+    }
+  }
+
+  /* Menu overlay */
+  .nav-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    display: flex;
+    flex-direction: column;
+    padding-inline: var(--gutter);
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: var(--bg-dark);
+    color: var(--ink-light);
+  }
+
+  .nav-overlay__bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+  }
+
+  .nav-overlay__body {
+    display: flex;
+    flex: 1 0 auto;
+    align-items: center;
+    padding-block: var(--space-6);
+  }
+
+  .nav-acts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nav-acts__link {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    align-items: baseline;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .nav-acts__numeral {
+    color: var(--muted);
+    transition: color var(--motion-s) var(--ease-reveal);
+  }
+
+  .nav-acts__link[aria-current] .nav-acts__numeral {
+    color: var(--ink-light);
+  }
+
+  .nav-acts__mask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.04em;
+  }
+
+  .nav-acts__title {
+    display: block;
+    transition: color var(--motion-s) var(--ease-reveal);
+  }
+
+  /* Pointer or keyboard emphasis: the focused line holds its ink, the rest recede. */
+  @media (hover: hover) {
+    .nav-acts:has(.nav-acts__link:hover) .nav-acts__link:not(:hover) .nav-acts__title {
+      color: var(--muted);
+    }
+  }
+
+  .nav-acts:has(.nav-acts__link:focus-visible)
+    .nav-acts__link:not(:focus-visible)
+    .nav-acts__title {
+    color: var(--muted);
+  }
+
+  .nav-overlay__foot {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: var(--hairline) solid var(--hairline-soft);
+  }
+
+  .nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nav-links__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .nav-links__item[aria-disabled="true"] {
+    color: var(--muted);
+  }
+
+  .nav-links__status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .nav-links__status::before {
+    content: "";
+    width: var(--space-1);
+    height: var(--hairline);
+    background-color: currentColor;
+  }
+
+  @media (hover: hover) {
+    .nav-links__item[href]:hover {
+      text-decoration: underline;
+      text-decoration-thickness: var(--hairline);
+      text-underline-offset: 4px;
+    }
+  }
+
+  .nav-overlay__meta {
+    display: flex;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--muted);
+  }
+
+  @media (width >= 48rem) {
+    .nav-acts__link {
+      grid-template-columns: clamp(4rem, 8vw, 9rem) minmax(0, 1fr);
+    }
+
+    .nav-overlay__foot {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: var(--space-4);
+    }
+
+    .nav-links__item {
+      min-height: 0;
+    }
+  }
+
+  /* Progress rail: vertical in the right margin on wide screens */
+  .progress-rail {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    .progress-rail {
+      position: fixed;
+      top: 50%;
+      right: var(--gutter);
+      z-index: var(--z-rail);
+      display: flex;
+      gap: var(--space-2);
+      color: var(--ink-light);
+      mix-blend-mode: difference;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+  }
+
+  .progress-rail__list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: var(--rail-length);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .progress-rail__item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    line-height: 1;
+  }
+
+  .progress-rail__title {
+    opacity: 0;
+    transition: opacity var(--motion-s) var(--ease-reveal);
+  }
+
+  .progress-rail__numeral {
+    width: 3.5ch;
+    color: var(--muted);
+    transition: color var(--motion-s) var(--ease-reveal);
+  }
+
+  .progress-rail__item[data-active="true"] .progress-rail__title {
+    opacity: 1;
+  }
+
+  .progress-rail__item[data-active="true"] .progress-rail__numeral {
+    color: var(--ink-light);
+  }
+
+  .progress-rail__track,
+  .progress-bar__track {
+    position: relative;
+    background-color: var(--hairline-soft);
+  }
+
+  .progress-rail__track {
+    width: var(--hairline);
+  }
+
+  .progress-rail__fill,
+  .progress-bar__fill {
+    position: absolute;
+    inset: 0;
+    background-color: currentColor;
+  }
+
+  .progress-rail__fill {
+    transform: scaleY(0);
+    transform-origin: top center;
+  }
+
+  /* Progress bar: a bottom hairline with the current act on narrow screens */
+  .progress-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--z-rail);
+    padding: 0 var(--gutter) max(var(--space-2), env(safe-area-inset-bottom));
+    color: var(--ink-light);
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+
+  .progress-bar__labels {
+    display: grid;
+  }
+
+  .progress-bar__label {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transition: opacity var(--motion-s) var(--ease-reveal);
+  }
+
+  .progress-bar__label[data-active="true"] {
+    opacity: 1;
+  }
+
+  .progress-bar__track {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: var(--hairline);
+  }
+
+  .progress-bar__fill {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  @media (width >= 48rem) {
+    .progress-bar {
+      display: none;
+    }
+  }
+
+  /* Magnetic button */
+  .magnetic-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 56px;
+    padding-inline: var(--space-4) var(--space-3);
+    border: var(--hairline) solid var(--hairline-soft);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition:
+      border-color var(--motion-s) var(--ease-reveal),
+      opacity var(--motion-xs) var(--ease-reveal);
+    will-change: transform;
+  }
+
+  .magnetic-button__mark {
+    width: var(--space-3);
+    height: var(--hairline);
+    background-color: currentColor;
+    transform: scaleX(0.5);
+    transform-origin: left center;
+    transition: transform var(--motion-s) var(--ease-reveal);
+  }
+
+  .magnetic-button:focus-visible {
+    border-color: currentColor;
+  }
+
+  .magnetic-button:focus-visible .magnetic-button__mark {
+    transform: scaleX(1);
+  }
+
+  @media (hover: hover) {
+    .magnetic-button:hover {
+      border-color: currentColor;
+    }
+
+    .magnetic-button:hover .magnetic-button__mark {
+      transform: scaleX(1);
+    }
+  }
+
+  .magnetic-button:active {
+    opacity: 0.72;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-toggle__glyph::before,
+    .nav-toggle__glyph::after {
+      transition: none;
+    }
+
+    .nav-toggle:hover .nav-toggle__glyph:not(.nav-toggle__glyph--close)::after {
+      transform: none;
+    }
+
+    .magnetic-button__mark,
+    .magnetic-button:hover .magnetic-button__mark,
+    .magnetic-button:focus-visible .magnetic-button__mark {
+      opacity: 0.56;
+      transform: none;
+      transition: opacity var(--motion-s) var(--ease-reveal);
+    }
+
+    .magnetic-button:hover .magnetic-button__mark,
+    .magnetic-button:focus-visible .magnetic-button__mark {
+      opacity: 1;
+    }
+  }
+}

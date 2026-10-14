@@ -3,7 +3,7 @@ import { stats } from '../../../data/stats';
 
 export default function Stats() {
   return (
-    <section aria-labelledby="stats-heading">
+    <section id="stats" data-act="arrival" aria-labelledby="stats-heading">
       <h2 id="stats-heading">{copy.stats.heading}</h2>
       <dl>
         {stats.map((stat) => (

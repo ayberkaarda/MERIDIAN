@@ -3,7 +3,7 @@ import { timeline } from '../../../data/timeline';
 
 export default function Timeline() {
   return (
-    <section aria-labelledby="timeline-heading">
+    <section id="timeline" data-act="transit" aria-labelledby="timeline-heading">
       <h2 id="timeline-heading">{copy.timeline.heading}</h2>
       <ol>
         {timeline.map((entry) => (

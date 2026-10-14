@@ -2,7 +2,7 @@ import { footer } from '../../../data/footer';
 
 export default function Footer() {
   return (
-    <footer aria-labelledby="footer-heading">
+    <footer id="footer" aria-labelledby="footer-heading">
       <h2 id="footer-heading">{footer.name}</h2>
       <p>{footer.descriptor}</p>
       <p>{footer.year}</p>

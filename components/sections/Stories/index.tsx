@@ -3,7 +3,7 @@ import { stories } from '../../../data/stories';
 
 export default function Stories() {
   return (
-    <section aria-labelledby="stories-heading">
+    <section id="stories" data-act="arrival" aria-labelledby="stories-heading">
       <h2 id="stories-heading">{copy.stories.heading}</h2>
       {stories.map((story) => (
         <article key={story.id}>

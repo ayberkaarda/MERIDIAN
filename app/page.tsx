@@ -1,4 +1,3 @@
-import { copy } from '../data/copy';
 import Footer from '../components/sections/Footer';
 import FinalHero from '../components/sections/FinalHero';
 import Hero from '../components/sections/Hero';
@@ -14,7 +13,6 @@ import Timeline from '../components/sections/Timeline';
 export default function Home() {
   return (
     <>
-      <a href="#main">{copy.navigation.skipLink}</a>
       <main id="main">
         <Hero />
         <Manifesto />

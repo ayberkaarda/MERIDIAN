@@ -25,7 +25,7 @@ export function useMagnetic<T extends HTMLElement = HTMLButtonElement>({ radius 
       tween = gsap.to(element, { x: 0, y: 0, duration: durations.s, ease: magneticReturnEase, overwrite: 'auto', onUpdate: () => { offsetX = Number(gsap.getProperty(element, 'x')); offsetY = Number(gsap.getProperty(element, 'y')); } });
     };
     const move = (event: PointerEvent): void => {
-      if (!query.matches || event.pointerType === 'touch') return;
+      if (!query.matches || event.pointerType === 'touch') { reset(); return; }
       const rect = element.getBoundingClientRect();
       const x = event.clientX - (rect.left + rect.width / 2 - offsetX);
       const y = event.clientY - (rect.top + rect.height / 2 - offsetY);
@@ -38,10 +38,14 @@ export function useMagnetic<T extends HTMLElement = HTMLButtonElement>({ radius 
     };
     window.addEventListener('pointermove', move, { passive: true });
     window.addEventListener('blur', reset);
+    document.documentElement.addEventListener('pointerleave', reset);
+    element.addEventListener('focus', reset);
     query.addEventListener('change', reset);
     return () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('blur', reset);
+      document.documentElement.removeEventListener('pointerleave', reset);
+      element.removeEventListener('focus', reset);
       query.removeEventListener('change', reset);
       tween?.kill();
       gsap.set(element, { clearProps: 'transform' });

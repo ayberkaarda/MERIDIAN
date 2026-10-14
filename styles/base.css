@@ -1,0 +1,94 @@
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: var(--theme-bg);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--theme-bg);
+    color: var(--theme-ink);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--font-body-size);
+    line-height: 1.5;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--theme-ink);
+    color: var(--theme-bg);
+  }
+
+  :focus-visible {
+    outline: var(--hairline) solid currentColor;
+    outline-offset: 4px;
+  }
+
+  /* Scroll is held while the preloader or the menu owns the screen. */
+  html[data-loading],
+  html[data-menu="open"] {
+    overflow: hidden;
+  }
+
+  /* Native cursor is replaced only while the custom cursor is mounted (pointer: fine). */
+  html[data-cursor="custom"],
+  html[data-cursor="custom"] * {
+    cursor: none;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: clip;
+  }
+
+  .lenis [data-lenis-prevent],
+  .lenis [data-lenis-prevent-wheel],
+  .lenis [data-lenis-prevent-touch] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+
+  .lenis.lenis-autoToggle {
+    transition-property: overflow;
+    transition-duration: 0s;
+    transition-behavior: allow-discrete;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  .skip-link {
+    position: fixed;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: calc(var(--z-preloader) + 1);
+    padding: var(--space-1) var(--space-2);
+    background-color: var(--theme-ink);
+    color: var(--theme-bg);
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: var(--font-meta-size);
+    letter-spacing: var(--font-meta-tracking);
+    text-transform: var(--font-meta-transform);
+    transform: translateY(calc(-100% - var(--space-4)));
+  }
+
+  .skip-link:focus-visible {
+    transform: none;
+  }
+}

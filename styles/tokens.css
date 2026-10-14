@@ -31,4 +31,31 @@
   --font-meta-size: clamp(11px, 0.85vw, 12px);
   --font-meta-tracking: 0.12em;
   --font-meta-transform: uppercase;
+
+  /* Theme surface: interpolated by the theme flip; everything themable reads these. */
+  --theme-bg: var(--bg-dark);
+  --theme-ink: var(--ink-light);
+  --theme-muted: var(--muted);
+
+  /* Hairlines */
+  --hairline: 1px;
+  --hairline-soft: color-mix(in srgb, currentColor 28%, transparent);
+
+  /* Chrome layout */
+  --gutter: var(--section-padding-inline);
+  --header-height: 64px;
+  --rail-length: 160px;
+
+  /* Stacking order */
+  --z-rail: 30;
+  --z-nav: 40;
+  --z-overlay: 50;
+  --z-preloader: 60;
+  --z-cursor: 70;
+}
+
+@media (width >= 48rem) {
+  :root {
+    --header-height: 88px;
+  }
 }
