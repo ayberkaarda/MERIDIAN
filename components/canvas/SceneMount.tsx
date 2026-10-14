@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useSyncExternalStore } from 'react';
 import { useMeridianStore } from '@/store';
+import { CanvasErrorBoundary } from './CanvasErrorBoundary';
 
 // Three.js / R3F load as their own chunk, after hydration, never in the route's first script set.
 const SceneRoot = dynamic(() => import('./SceneRoot').then((module) => ({ default: module.SceneRoot })), {
@@ -17,7 +18,7 @@ export function SceneMount() {
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   return (
     <>
-      <SceneRoot />
+      <CanvasErrorBoundary><SceneRoot /></CanvasErrorBoundary>
       {mounted && tier !== 'high' ? <div className="scene-vignette" aria-hidden="true" /> : null}
     </>
   );

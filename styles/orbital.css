@@ -1,0 +1,147 @@
+/*
+ * Act II · 2.1 Orbital System.
+ * The scene is the image; the DOM keeps to the edges. With motion the stage is
+ * held (sticky) for 200vh while the camera closes on the core. Under reduced
+ * motion it is one static viewport. The legend is the DOM equivalent of the
+ * scene's ORBIT 01 / 02 / 03 labels.
+ */
+
+@layer components {
+  .orbital {
+    position: relative;
+    overflow-x: clip;
+    color: var(--ink-light);
+  }
+
+  .orbital__stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(var(--space-8), 1fr) auto auto;
+    grid-template-areas:
+      "head"
+      "."
+      "legend"
+      "line";
+    min-height: 100svh;
+    padding:
+      calc(var(--header-height) + var(--space-2))
+      var(--gutter)
+      calc(var(--space-10) + env(safe-area-inset-bottom));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .orbital {
+      /* 100svh stage held for 200vh of approach. */
+      height: calc(100svh + 200vh);
+    }
+
+    .orbital__stage {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+    }
+  }
+
+  .orbital__header {
+    grid-area: head;
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .orbital__heading {
+    margin: 0;
+    font-family: var(--font-instrument-serif), ui-serif, Georgia, serif;
+    font-size: var(--font-editorial-size);
+    font-weight: 400;
+    line-height: var(--font-editorial-leading);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  .orbital__legend {
+    grid-area: legend;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--theme-muted);
+  }
+
+  .orbital__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  /* Ring index: one, two, three hairline arcs echo the three inclinations. */
+  .orbital__legend-tick {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: var(--hairline) solid currentColor;
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+
+  .orbital__legend-tick[data-ring="2"] {
+    transform: scaleY(0.6) rotate(-18deg);
+  }
+
+  .orbital__legend-tick[data-ring="3"] {
+    transform: scaleY(0.35) rotate(24deg);
+  }
+
+  .orbital__distance {
+    grid-area: line;
+    display: block;
+    height: var(--hairline);
+    margin-block-start: var(--space-3);
+    background-color: var(--hairline-soft);
+    overflow: hidden;
+  }
+
+  .orbital__distance-fill {
+    display: block;
+    height: 100%;
+    background-color: currentColor;
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orbital__distance {
+      display: none;
+    }
+  }
+
+  /*
+   * Desktop: heading upper left, the legend stacked lower right as a key to
+   * the rings, the approach hairline as the floor of the stage.
+   */
+  @media (width >= 48rem) {
+    .orbital__stage {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        "head ."
+        ". ."
+        ". legend"
+        "line line";
+      padding-block-end: var(--space-6);
+      /* Right margin stays free for the progress rail. */
+      padding-inline-end: calc(var(--gutter) + var(--space-16));
+    }
+
+    .orbital__heading {
+      max-inline-size: 12ch;
+    }
+
+    .orbital__legend {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+  }
+}

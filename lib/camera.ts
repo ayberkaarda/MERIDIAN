@@ -22,13 +22,18 @@ export function interpolateCamera(
   keyframes: readonly CameraKeyframe[],
   progress: number,
   result: CameraPose = createCameraPose(),
+  easingRange?: readonly [number, number],
 ): CameraPose {
   const first = keyframes[0];
   if (!first) return result;
   const last = keyframes[keyframes.length - 1] ?? first;
   const clamped = Number.isFinite(progress) ? Math.min(last.at, Math.max(first.at, progress)) : first.at;
-  const duration = last.at - first.at;
-  const at = duration > 0 ? first.at + duration * easeCamera((clamped - first.at) / duration) : first.at;
+  // Keep Act I's easing independent of keyframes appended for later acts.
+  const start = easingRange?.[0] ?? first.at;
+  const end = easingRange?.[1] ?? last.at;
+  const duration = end - start;
+  const normalized = duration > 0 ? Math.min(1, Math.max(0, (clamped - start) / duration)) : 0;
+  const at = duration > 0 ? start + duration * easeCamera(normalized) : start;
   let from = first;
   let to = first;
   for (const frame of keyframes) {

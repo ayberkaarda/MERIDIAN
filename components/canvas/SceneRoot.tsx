@@ -9,6 +9,8 @@ import { LoadingBridge } from './LoadingBridge';
 
 const Planet = lazy(() => import('./bodies/Planet').then((module) => ({ default: module.Planet })));
 const Effects = lazy(() => import('./effects/Effects').then((module) => ({ default: module.Effects })));
+const OrbitalSystem = lazy(() => import('./bodies/OrbitalSystem').then((module) => ({ default: module.OrbitalSystem })));
+const TechnologyVisual = lazy(() => import('./bodies/TechnologyVisual').then((module) => ({ default: module.TechnologyVisual })));
 
 export function SceneRoot() {
   const tier = useMeridianStore((state) => state.tier);
@@ -23,6 +25,8 @@ export function SceneRoot() {
     >
       <CameraRig />
       <Suspense fallback={null}><Planet /></Suspense>
+      <Suspense fallback={null}><OrbitalSystem /></Suspense>
+      <Suspense fallback={null}><TechnologyVisual /></Suspense>
       <Suspense fallback={null}><Effects /></Suspense>
     </Canvas></>
   );

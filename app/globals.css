@@ -5,6 +5,9 @@
 @import "../styles/typography.css";
 @import "../styles/hero.css";
 @import "../styles/manifesto.css";
+@import "../styles/orbital.css";
+@import "../styles/timeline.css";
+@import "../styles/technology.css";
 @import "../styles/scene.css";
 
 @custom-variant pointer-fine (@media (pointer: fine));

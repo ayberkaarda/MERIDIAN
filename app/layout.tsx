@@ -9,6 +9,7 @@ import { ProgressRail } from "@/components/ui/ProgressRail";
 import { copy } from "@/data/copy";
 import { SceneMount } from "@/components/canvas/SceneMount";
 import { SceneScrollBridge } from "@/hooks/SceneScrollBridge";
+import { OrbitScrollBridge } from "@/hooks/OrbitScrollBridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a href="#main" className="skip-link">{copy.navigation.skipLink}</a>
         <AppProviders>
           <SceneScrollBridge />
+          <OrbitScrollBridge />
           <SceneMount />
           <Preloader />
           <Cursor />
