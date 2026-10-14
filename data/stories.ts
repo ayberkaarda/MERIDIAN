@@ -1,0 +1,8 @@
+export interface StoryMetadata { label: string; value: string }
+export interface Story { id: string; number: string; title: string; label: string; headline: string; body: string; alignment: 'left' | 'right'; visual: 'orbit' | 'habitat' | 'journey'; metadata: readonly StoryMetadata[] }
+// Headlines, paragraphs and metadata extend the story titles supplied in the brief.
+export const stories = [
+  { id: 'orbit', number: '01', title: 'THE ORBIT', label: '01 THE ORBIT', headline: 'A foundation beyond Earth.', body: 'Orbit is where the next chapter takes shape. MERIDIAN connects the systems that turn a distant outpost into lasting infrastructure.', alignment: 'left', visual: 'orbit', metadata: [{ label: 'DOMAIN', value: 'ORBITAL INFRASTRUCTURE' }, { label: 'REFERENCE', value: '2046' }] },
+  { id: 'habitat', number: '02', title: 'THE HABITAT', label: '02 THE HABITAT', headline: 'Built for a life in motion.', body: 'A habitat is more than shelter. Thermal control, life support and autonomous operations work together to make human presence possible, year after year.', alignment: 'right', visual: 'habitat', metadata: [{ label: 'DOMAIN', value: 'HUMAN PRESENCE' }, { label: 'MISSION LIFESPAN', value: '18 YEARS' }] },
+  { id: 'journey', number: '03', title: 'THE JOURNEY', label: '03 THE JOURNEY', headline: 'Distance becomes possibility.', body: 'Every trajectory begins with a decision to leave the familiar. We build the systems that carry that decision forward, from the first departure to the next arrival.', alignment: 'left', visual: 'journey', metadata: [{ label: 'DOMAIN', value: 'DEEP-SPACE SYSTEMS' }, { label: 'SIMULATED TRAJECTORY', value: '4.2B km' }] },
+] as const satisfies readonly Story[];

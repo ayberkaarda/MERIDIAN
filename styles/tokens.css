@@ -1,0 +1,34 @@
+:root {
+  --bg-dark: #030303;
+  --bg-light: #f4f1ea;
+  --ink-light: #f4f1ea;
+  --ink-dark: #0a0a0a;
+  --muted: #8d8d8d;
+  --accent: #ff5a1f;
+  --cool: #a8c7ff;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+  --space-16: 128px;
+  --space-24: 192px;
+  --section-padding-inline: clamp(24px, 5vw, 96px);
+  --section-padding-block: clamp(64px, 10vw, 192px);
+  --section-padding-block-large: clamp(96px, 16vw, 256px);
+  --font-display-size: clamp(64px, 10vw, 180px);
+  --font-display-mobile-size: clamp(48px, 13vw, 72px);
+  --font-display-tracking: -0.04em;
+  --font-display-leading: 0.9;
+  --font-editorial-size: clamp(32px, 4.5vw, 72px);
+  --font-editorial-leading: 1.05;
+  --font-body-size: clamp(16px, 1.25vw, 18px);
+  --font-body-max-width: 34ch;
+  --font-meta-size: clamp(11px, 0.85vw, 12px);
+  --font-meta-tracking: 0.12em;
+  --font-meta-transform: uppercase;
+}
