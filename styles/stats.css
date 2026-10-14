@@ -1,0 +1,105 @@
+/*
+ * Act III · 3.2 Data.
+ * Mobile: one figure per row, hairline between rows.
+ * Desktop: a 2 x 2 field of figures; each numeral reserves its final width
+ * (in tabular digits) so the count-up never reflows the grid.
+ */
+
+@layer components {
+  .stats {
+    position: relative;
+    overflow-x: clip;
+    color: var(--theme-ink);
+  }
+
+  .stats__stage {
+    display: grid;
+    gap: var(--space-6);
+    padding:
+      var(--section-padding-block)
+      var(--gutter)
+      calc(var(--section-padding-block) + env(safe-area-inset-bottom));
+  }
+
+  .stats__heading {
+    margin: 0;
+    color: var(--theme-muted);
+  }
+
+  .stats__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+  }
+
+  .stats__item {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-top: var(--hairline) solid var(--hairline-soft);
+  }
+
+  .stats__label {
+    display: flex;
+    gap: var(--space-2);
+    color: var(--theme-muted);
+  }
+
+  .stats__value {
+    margin: 0;
+  }
+
+  .stats__figure {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(56px, 17vw, 88px);
+    font-weight: 500;
+    line-height: var(--font-display-leading);
+    letter-spacing: var(--font-display-tracking);
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: nowrap;
+  }
+
+  .stats__numeral {
+    display: inline-block;
+    min-inline-size: calc(var(--stat-chars, 1) * 1ch);
+    text-align: end;
+  }
+
+  .stats__suffix {
+    font-family: var(--font-instrument-serif), ui-serif, Georgia, serif;
+    font-size: 0.42em;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .stats__suffix[data-spaced="true"] {
+    margin-inline-start: 0.24em;
+  }
+
+  @media (width >= 48rem) {
+    .stats__stage {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+      align-items: start;
+      column-gap: var(--space-8);
+      min-height: 100svh;
+      align-content: center;
+      padding-inline-end: calc(var(--gutter) + var(--space-16));
+    }
+
+    .stats__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-8);
+    }
+
+    .stats__item {
+      padding-block: var(--space-6) var(--space-8);
+    }
+
+    .stats__figure {
+      font-size: clamp(64px, 7.2vw, 132px);
+    }
+  }
+}

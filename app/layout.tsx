@@ -10,6 +10,7 @@ import { copy } from "@/data/copy";
 import { SceneMount } from "@/components/canvas/SceneMount";
 import { SceneScrollBridge } from "@/hooks/SceneScrollBridge";
 import { OrbitScrollBridge } from "@/hooks/OrbitScrollBridge";
+import { CraftScrollBridge } from "@/hooks/CraftScrollBridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <AppProviders>
           <SceneScrollBridge />
           <OrbitScrollBridge />
+          <CraftScrollBridge />
           <SceneMount />
           <Preloader />
           <Cursor />

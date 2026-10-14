@@ -1,0 +1,71 @@
+/*
+ * Theme surface. `--theme-mix` (0 dark .. 1 light) is written on the root
+ * element by the theme flip, derived from scroll position. Every themable
+ * colour is a color-mix of the two poles, so the browser interpolates and no
+ * colour math runs in script.
+ *
+ * Range contract (components/transitions/ThemeFlip.tsx):
+ * - rise: the element marked `data-theme-rise`; mix climbs 0 -> 1 while it
+ *   scrolls from its top at the viewport top to its bottom at the viewport bottom.
+ * - set: the element marked `data-theme-set`; mix falls 1 -> 0 over the same
+ *   relative interval. Without a set element the light theme holds to the end.
+ * Reduced motion: the mix is either 0 or 1, flipped at each range midpoint,
+ * and a veil crossfades the change with opacity only.
+ */
+
+@property --theme-mix {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  --theme-mix: 0;
+  /* Darker grey for the light pole: #8d8d8d on #f4f1ea would fall below 4.5:1. */
+  --muted-on-light: #5e5b56;
+  --theme-mix-percent: calc(var(--theme-mix) * 100%);
+  --theme-bg: color-mix(in srgb, var(--bg-light) var(--theme-mix-percent), var(--bg-dark));
+  --theme-ink: color-mix(in srgb, var(--ink-dark) var(--theme-mix-percent), var(--ink-light));
+  --theme-muted: color-mix(in srgb, var(--muted-on-light) var(--theme-mix-percent), var(--muted));
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+@layer components {
+  /* Empty scroll ranges in which the scene carries the transition. */
+  .theme-range {
+    display: block;
+    pointer-events: none;
+  }
+
+  .theme-range--rise {
+    height: calc(100svh + 120vh);
+  }
+
+  .theme-range--set {
+    height: calc(100svh + 80vh);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-range--rise,
+    .theme-range--set {
+      height: 100svh;
+    }
+  }
+
+  /* Reduced-motion crossfade: the outgoing surface, faded out over one `m`. */
+  .theme-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    background-color: var(--bg-dark);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .theme-veil[data-from="light"] {
+    background-color: var(--bg-light);
+  }
+}

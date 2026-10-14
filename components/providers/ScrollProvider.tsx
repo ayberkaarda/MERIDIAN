@@ -104,11 +104,31 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     const resize = new ResizeObserver(schedule);
     resize.observe(document.documentElement);
     resize.observe(document.body);
-    const mutations = new MutationObserver(schedule);
+    const ignored = (node: Node | null): boolean => {
+      const element = node instanceof Element ? node : node?.parentElement;
+      return !!element?.closest('[data-no-refresh]');
+    };
+    const mutations = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type === 'characterData') continue;
+        if (ignored(record.target)) continue;
+        schedule();
+        return;
+      }
+    });
     mutations.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-act'] });
+    let fontTimer = 0;
+    const fontRefresh = (): void => {
+      window.clearTimeout(fontTimer);
+      fontTimer = window.setTimeout(() => {
+        if (!disposed) { schedule(); ScrollTrigger.refresh(); }
+      }, 120);
+    };
     window.addEventListener('resize', schedule);
     window.addEventListener('load', schedule);
     document.fonts.addEventListener('loadingdone', schedule);
+    document.fonts.addEventListener('loadingdone', fontRefresh);
+    void document.fonts.ready.then(fontRefresh);
     schedule();
     return () => {
       disposed = true;
@@ -120,6 +140,8 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('resize', schedule);
       window.removeEventListener('load', schedule);
       document.fonts.removeEventListener('loadingdone', schedule);
+      document.fonts.removeEventListener('loadingdone', fontRefresh);
+      window.clearTimeout(fontTimer);
       trigger.kill();
       controller?.destroy();
     };

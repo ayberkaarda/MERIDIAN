@@ -1,0 +1,189 @@
+/*
+ * Act III · 3.4 Editorial Stories (light theme).
+ * Mobile: each panel runs edge to edge in portrait, the text follows below.
+ * Desktop: a twelve-column row; panel and text swap sides story by story.
+ * The panel is transparent so the shared scene draws the story's shader
+ * through it. The reveal is a clip-path on the panel itself, which the scene
+ * honours as its scissor, so no opaque surface ever sits over the scene; a
+ * gradient stands in only until the panel pass draws or without WebGL.
+ */
+
+@layer components {
+  .stories {
+    position: relative;
+    overflow-x: clip;
+    color: var(--theme-ink);
+  }
+
+  .stories__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--section-padding-block-large);
+    padding:
+      var(--section-padding-block)
+      var(--gutter)
+      var(--section-padding-block-large);
+  }
+
+  .stories__heading {
+    margin: 0;
+    color: var(--theme-muted);
+  }
+
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .story__frame {
+    position: relative;
+    margin-inline: calc(-1 * var(--gutter));
+    aspect-ratio: 4 / 5;
+  }
+
+  .story__panel {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    transform-origin: 50% 50%;
+    will-change: transform, clip-path;
+  }
+
+  .story__fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  .story__panel[data-fallback="true"] .story__fallback {
+    display: block;
+  }
+
+  /* Orbit: a pale limb of the planet under a long, thin transfer arc. */
+  .story__fallback[data-visual="orbit"] {
+    background:
+      radial-gradient(circle at 50% 135%, transparent 0 58%, rgb(10 10 10 / 0.22) 58.3%, transparent 58.8%),
+      radial-gradient(circle at 50% 140%, #c9c3b6 0%, #9c968a 38%, transparent 62%),
+      linear-gradient(180deg, #e6e1d6 0%, #d8d2c5 100%);
+  }
+
+  /* Habitat: a warm pressurised interior read as soft concentric light. */
+  .story__fallback[data-visual="habitat"] {
+    background:
+      repeating-radial-gradient(circle at 62% 46%, transparent 0 34px, rgb(10 10 10 / 0.06) 34px 35px),
+      radial-gradient(circle at 62% 46%, #f1ebde 0%, #cfc4b0 34%, #8f8677 72%, #5f5a52 100%);
+  }
+
+  /* Journey: a low sun behind a field of long trajectory lines. */
+  .story__fallback[data-visual="journey"] {
+    background:
+      repeating-linear-gradient(168deg, transparent 0 22px, rgb(10 10 10 / 0.08) 22px 23px),
+      radial-gradient(ellipse 60% 40% at 24% 78%, #fbf6ea 0%, transparent 70%),
+      linear-gradient(168deg, #d9d2c2 0%, #b4ab99 54%, #7e776b 100%);
+  }
+
+  .story__text {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+
+  .story__heading {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .story__label {
+    display: block;
+    color: var(--theme-muted);
+  }
+
+  .story__headline {
+    display: block;
+    max-inline-size: 14ch;
+    font-family: var(--font-instrument-serif), ui-serif, Georgia, serif;
+    font-size: var(--font-editorial-size);
+    line-height: var(--font-editorial-leading);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .story__body {
+    margin: 0;
+    max-inline-size: var(--font-body-max-width);
+    font-size: var(--font-body-size);
+    line-height: 1.55;
+  }
+
+  .story__meta {
+    display: grid;
+    gap: var(--space-1);
+    margin: var(--space-2) 0 0;
+    padding-top: var(--space-2);
+    border-top: var(--hairline) solid var(--hairline-soft);
+    max-inline-size: 40ch;
+  }
+
+  .story__meta-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+
+  .story__meta dt {
+    color: var(--theme-muted);
+  }
+
+  .story__meta dd {
+    margin: 0;
+    text-align: end;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .story__panel {
+      will-change: auto;
+    }
+  }
+
+  /* Desktop: the panel and the text alternate sides. */
+  @media (width >= 48rem) {
+    .stories__body {
+      padding-inline-end: calc(var(--gutter) + var(--space-16));
+    }
+
+    .story {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-3);
+      align-items: end;
+    }
+
+    .story__frame {
+      margin-inline: 0;
+      aspect-ratio: 16 / 11;
+    }
+
+    /* One empty column between panel and text absorbs the approach scale. */
+    .story[data-align="left"] .story__frame {
+      grid-column: 1 / span 6;
+      grid-row: 1;
+    }
+
+    .story[data-align="left"] .story__text {
+      grid-column: 8 / span 5;
+      grid-row: 1;
+    }
+
+    .story[data-align="right"] .story__frame {
+      grid-column: 7 / span 6;
+      grid-row: 1;
+    }
+
+    .story[data-align="right"] .story__text {
+      grid-column: 1 / span 5;
+      grid-row: 1;
+    }
+  }
+}

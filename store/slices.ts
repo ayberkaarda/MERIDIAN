@@ -6,14 +6,54 @@ export interface LoadingSlice { loadingProgress: number; isLoaded: boolean; setL
 export interface ScrollSlice { scrollProgress: number; departureProgress: number; orbitProgress: number; setScrollProgress: (progress: number) => void; setDepartureProgress: (progress: number) => void; setOrbitProgress: (progress: number) => void }
 export interface TechnologySlice { activeTech: number; techPanel: HTMLElement | null; setActiveTech: (index: number) => void; setTechPanel: (element: HTMLElement | null) => void }
 export interface TimelineSlice { timelineIndex: number; setTimelineIndex: (index: number) => void }
+export interface CraftLabelPoint { x: number; y: number; visible: boolean }
+export interface ArrivalSlice {
+  themeProgress: number;
+  setThemeProgress: (progress: number) => void;
+  craftProgress: number;
+  setCraftProgress: (progress: number) => void;
+  storyPanels: (HTMLElement | null)[];
+  setStoryPanel: (index: number, element: HTMLElement | null) => void;
+  activeStory: number;
+  setActiveStory: (index: number) => void;
+  /** Mutable normalized screen coordinates, ordered radiator, docking, bus. */
+  craftLabelPoints: CraftLabelPoint[];
+  panelsReady: boolean;
+  setPanelsReady: (ready: boolean) => void;
+}
 export interface ActSlice { activeAct: ActId; setActiveAct: (act: ActId) => void }
 export interface PointerPosition { x: number; y: number; normalizedX: number; normalizedY: number; visible: boolean }
 export interface PointerSlice { pointer: PointerPosition; setPointer: (pointer: PointerPosition) => void }
 export interface MotionSlice { reducedMotion: boolean; setReducedMotion: (reduced: boolean) => void }
 export interface TierSlice { tier: DeviceTier; setTier: (tier: DeviceTier) => void }
-export type MeridianStore = LoadingSlice & ScrollSlice & ActSlice & PointerSlice & MotionSlice & TierSlice & TechnologySlice & TimelineSlice;
+export type MeridianStore = LoadingSlice & ScrollSlice & ActSlice & PointerSlice & MotionSlice & TierSlice & TechnologySlice & TimelineSlice & ArrivalSlice;
 type Slice<T> = StateCreator<MeridianStore, [], [], T>;
 const clamp = (value: number, max: number): number => Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : 0;
+export const createArrivalSlice: Slice<ArrivalSlice> = (set) => ({
+  themeProgress: 0,
+  setThemeProgress: (progress) => set({ themeProgress: clamp(progress, 1) }),
+  craftProgress: 0,
+  setCraftProgress: (progress) => set({ craftProgress: clamp(progress, 1) }),
+  storyPanels: [null, null, null],
+  setStoryPanel: (index, element) => {
+    if (!Number.isInteger(index) || index < 0 || index > 2) return;
+    set((state) => {
+      if (state.storyPanels[index] === element) return state;
+      const storyPanels = state.storyPanels.slice();
+      storyPanels[index] = element;
+      return { storyPanels };
+    });
+  },
+  activeStory: 0,
+  setActiveStory: (index) => set({ activeStory: Math.trunc(clamp(index, 2)) }),
+  panelsReady: false,
+  setPanelsReady: (panelsReady) => set((state) => (state.panelsReady === panelsReady ? state : { panelsReady })),
+  craftLabelPoints: [
+    { x: 0, y: 0, visible: false },
+    { x: 0, y: 0, visible: false },
+    { x: 0, y: 0, visible: false },
+  ],
+});
 export const createLoadingSlice: Slice<LoadingSlice> = (set) => ({ loadingProgress: 0, isLoaded: false, setLoadingProgress: (progress) => set((state) => { const loadingProgress = Math.max(state.loadingProgress, clamp(progress, 100)); return { loadingProgress, isLoaded: state.isLoaded || loadingProgress === 100 }; }) });
 export const createScrollSlice: Slice<ScrollSlice> = (set) => ({ scrollProgress: 0, departureProgress: 0, orbitProgress: 0, setScrollProgress: (progress) => set({ scrollProgress: clamp(progress, 1) }), setDepartureProgress: (progress) => set({ departureProgress: clamp(progress, 1) }), setOrbitProgress: (progress) => set({ orbitProgress: clamp(progress, 1) }) });
 export const createTechnologySlice: Slice<TechnologySlice> = (set) => ({ activeTech: 0, techPanel: null, setActiveTech: (index) => set({ activeTech: Math.trunc(clamp(index, 3)) }), setTechPanel: (techPanel) => set({ techPanel }) });

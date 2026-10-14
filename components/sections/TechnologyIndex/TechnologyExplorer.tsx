@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
+import { usePanelFallback } from '@/components/sections/panelFallback';
 import { motionCssVars } from '@/components/ui/motion-presets';
 import { technologies, type Technology } from '@/data/technologies';
 import { useFocusZone } from '@/hooks/useFocusZone';
@@ -17,30 +18,6 @@ const HELD_PANEL_QUERY = '(max-width: 47.99rem)';
 const total = String(technologies.length).padStart(2, '0');
 
 const matches = (query: string): boolean => window.matchMedia(query).matches;
-
-/*
- * The store has no WebGL availability field, so the panel probes once, on the
- * client, whether a WebGL context can be created at all. The gradient stands in
- * only for the server render / first paint and when WebGL is unavailable; every
- * tier with WebGL (low included, static uniforms) draws through the panel.
- */
-let webglSupport: boolean | undefined;
-const probeWebgl = (): boolean => {
-  if (webglSupport === undefined) {
-    try {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('webgl2');
-      webglSupport = context !== null;
-      context?.getExtension('WEBGL_lose_context')?.loseContext();
-    } catch {
-      webglSupport = false;
-    }
-  }
-  return webglSupport;
-};
-const subscribeNever = (): (() => void) => () => undefined;
-const needsFallbackOnClient = (): boolean => !probeWebgl();
-const needsFallbackOnServer = (): boolean => true;
 
 interface TechnologyExplorerProps {
   heading: string;
@@ -62,7 +39,7 @@ interface SwapController {
 export function TechnologyExplorer({ heading, headingId }: TechnologyExplorerProps) {
   const [selected, setSelected] = useState(0);
   const [shown, setShown] = useState(0);
-  const fallback = useSyncExternalStore(subscribeNever, needsFallbackOnClient, needsFallbackOnServer);
+  const fallback = usePanelFallback();
   const registerPanel = useTechPanelRegistration();
   const shutterRef = useRef<HTMLSpanElement>(null);
   const controllerRef = useRef<SwapController | null>(null);

@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useDeviceTier } from '@/hooks/useDeviceTier';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePointer } from '@/hooks/usePointer';
+import { PanelRectBridge } from '@/hooks/PanelRectBridge';
 import { useMeridianStore } from '@/store';
 import { LOADING_TIMEOUT_MS } from '@/lib/motion';
 import { ScrollProvider } from './ScrollProvider';
@@ -31,5 +32,5 @@ function EnvironmentBridge() {
 }
 
 export function AppProviders({ children }: { children: ReactNode }) {
-  return <><EnvironmentBridge /><LoadingBridge /><ScrollProvider>{children}</ScrollProvider></>;
+  return <><EnvironmentBridge /><PanelRectBridge /><LoadingBridge /><ScrollProvider>{children}</ScrollProvider></>;
 }
