@@ -13,6 +13,8 @@
 @import "../styles/stats.css";
 @import "../styles/stories.css";
 @import "../styles/interlude.css";
+@import "../styles/finalhero.css";
+@import "../styles/footer.css";
 @import "../styles/scene.css";
 
 @custom-variant pointer-fine (@media (pointer: fine));

@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrthographicCamera, Vector4, type Scene, type WebGLRenderer } from 'three';
 import { readPanelBounds } from '@/hooks/panelRectCache';
 import { useMeridianStore } from '@/store';
+import { setAnimating } from '../frameDemand';
 
 /*
  * Single-canvas panel rendering (the drei View technique, done in place).
@@ -29,6 +30,7 @@ import { useMeridianStore } from '@/store';
  * pass unmounts.
  */
 export const PANEL_PASS_PRIORITY = 1;
+const ANIMATION_KEY = 'panels';
 
 export interface PanelLayerOptions {
   /** Draw order between panels; lower draws first. */
@@ -109,7 +111,10 @@ export function PanelPass() {
     registry.hosts.push(token);
     return () => {
       remove(registry.hosts, token);
-      if (registry.hosts.length === 0) setReady(registry, false);
+      if (registry.hosts.length === 0) {
+        setReady(registry, false);
+        setAnimating(ANIMATION_KEY, false);
+      }
     };
   }, [gl, token]);
 
@@ -132,6 +137,10 @@ export function PanelPass() {
         clip.left < size.width;
       if (onScreen) drawn.push(layer);
     }
+    // On-screen panels follow DOM tweens (scale, clip-path) and animated
+    // uniforms, which no store change announces; under reduced motion both
+    // are still and scroll alone moves them.
+    setAnimating(ANIMATION_KEY, drawn.length > 0 && !useMeridianStore.getState().reducedMotion);
     if (drawn.length === 0) {
       // Every panel off screen or fully clipped: just the main scene.
       renderer.render(scene, camera);

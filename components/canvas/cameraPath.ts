@@ -1,6 +1,7 @@
 import { createCameraPose, interpolateCamera, type CameraKeyframe, type CameraPose } from '@/lib/camera';
 import type { DeviceTier } from '@/lib/tiers';
 import { useMeridianStore } from '@/store';
+import type { CraftPart } from '@/data/inspections';
 
 /**
  * World position of the MERIDIAN orbital core (Act II). It sits well off the
@@ -256,14 +257,100 @@ export function getCraftCamera(progress: number, options: CraftCameraOptions = {
 
 /*
  * Act IV: the hero planet returns, larger and closer than in Act I (d = 2.9
- * against 4.2). The disc overfills the frame height and bleeds off the right
- * edge, leaving the left half to the closing headline. Portrait: the body
- * crops past the top and right edges above the headline (d = 4.6 against 6.5).
- * Both are static poses; the scroll motion of Act IV is the setting sun.
+ * against 4.2), under the same key light. The camera has also swung ~24
+ * degrees round towards that light, so the body comes back in fuller light
+ * (phase angle ~45 degrees against ~70 in the hero): the journey closes on the
+ * lit face. Landscape: the disc overfills the frame height, its centre ~10
+ * degrees right of the view axis and a touch low, the lit limb just at the
+ * right edge. Portrait: d = 4.6 against 6.5; wider than the screen, the body
+ * sits high (centre ~7 degrees above the axis) above the headline.
+ *
+ * The return begins at the top of the sun-set range, while the sun disc still
+ * covers the whole frame, so the cut from the craft to the planet is never
+ * seen. As the sun sinks (themeProgress 1 -> 0) the camera settles a short way
+ * in from a slightly wider approach pose; once the sun is down the final pose
+ * holds for the rest of the page. Reduced motion uses the final pose only.
  */
-export const returnCameraPose: CameraPose = { at: 0, position: [0, -0.15, 2.9], target: [-0.95, 0.05, 0], fov: 35 };
-export const returnCameraPosePortrait: CameraPose = { at: 0, position: [0, 0, 4.6], target: [-0.22, -0.7, 0], fov: 35 };
+export const returnCameraPose: CameraPose = { at: 0, position: [1.2, 0.15, 2.65], target: [-0.444, 0.102, 0.245], fov: 35 };
+export const returnCameraPosePortrait: CameraPose = { at: 0, position: [1.886, 0.23, 4.186], target: [-0.188, -0.558, 0.16], fov: 35 };
+/* Approach poses: the same viewing direction and screen offsets, ~15% farther out. */
+const returnApproachPose: CameraPose = { at: 0, position: [1.38, 0.1725, 3.0475], target: [-0.511, 0.117, 0.281], fov: 35 };
+const returnApproachPosePortrait: CameraPose = { at: 0, position: [2.173, 0.265, 4.823], target: [-0.216, -0.643, 0.184], fov: 35 };
 
-export function getReturnCamera(portrait = false): CameraPose {
-  return portrait ? returnCameraPosePortrait : returnCameraPose;
+const sharedReturnPose = createCameraPose();
+
+/**
+ * Camera pose for Act IV. `settle` runs 0..1 as the sun sets (1 = final pose,
+ * the default). Allocation free: the pose is written into `result` or a shared
+ * object.
+ */
+export function getReturnCamera(portrait = false, settle = 1, result: CameraPose = sharedReturnPose): CameraPose {
+  const from = portrait ? returnApproachPosePortrait : returnApproachPose;
+  const to = portrait ? returnCameraPosePortrait : returnCameraPose;
+  const t = easeInOut(Number.isFinite(settle) ? Math.min(1, Math.max(0, settle)) : 1);
+  for (let axis = 0; axis < 3; axis += 1) {
+    result.position[axis] = mix(from.position[axis] ?? 0, to.position[axis] ?? 0, t);
+    result.target[axis] = mix(from.target[axis] ?? 0, to.target[axis] ?? 0, t);
+  }
+  result.fov = mix(from.fov, to.fov, t);
+  result.at = t;
+  return result;
+}
+
+/*
+ * Scene phase: which body the camera is on. `return` starts either with the
+ * Act IV section or, earlier, at the top of the sun-set range (written by the
+ * CameraRig from a scroll trigger), so the craft never reappears while the sun
+ * goes down and the act boundary itself causes no cut.
+ */
+export type ScenePhase = 'path' | 'craft' | 'return';
+
+/** themeProgress from which the sun disc (with motion) covers the whole viewport. */
+export const SUN_COVER_AT = 0.94;
+
+interface PhaseInputs {
+  activeAct: string;
+  returnPhaseActive?: boolean;
+  craftProgress: number;
+}
+
+export function getScenePhase(state: PhaseInputs): ScenePhase {
+  if (state.activeAct === 'return' || state.returnPhaseActive) return 'return';
+  if (state.activeAct === 'arrival' || state.craftProgress > 0) return 'craft';
+  return 'path';
+}
+
+const orbitInspectionPose: CameraPose = { at: 0, position: [55.5, -6.8, 353], target: [58.14, -10, 339.36], fov: 35 };
+const orbitInspectionPortrait: CameraPose = { at: 0, position: [50.1, -2.75, 370.6], target: [60, -11.5, 340], fov: 35 };
+
+export function getOrbitInspectionCamera(portrait: boolean): CameraPose {
+  return portrait ? orbitInspectionPortrait : orbitInspectionPose;
+}
+
+const inspectionFrames: Record<CraftPart, CraftOrbitFrame> = {
+  radiator: { theta: -25, elevation: 32, radius: 11, fov: 35, shift: [0.3, 0.12] },
+  docking: { theta: -68, elevation: 18, radius: 8.5, fov: 35, shift: [0.3, 0.12] },
+  bus: { theta: -15, elevation: 32, radius: 10, fov: 35, shift: [0.3, 0.12] },
+};
+const inspectionPortraitFrames: Record<CraftPart, CraftOrbitFrame> = {
+  radiator: { theta: -25, elevation: 32, radius: 19, fov: 40, shift: [0, 0.2] },
+  docking: { theta: -68, elevation: 18, radius: 16, fov: 40, shift: [0, 0.2] },
+  bus: { theta: -15, elevation: 32, radius: 17, fov: 40, shift: [0, 0.2] },
+};
+const inspectionTargets: Record<CraftPart, Vec3> = {
+  radiator: [0.25, 0.15, 1.9], docking: [-3.8, 0, 0], bus: [0.25, 0.55, 0],
+};
+const inspectionPose = createCameraPose();
+const inspectionWorld: Vec3 = [0, 0, 0];
+
+export function getCraftInspectionCamera(part: CraftPart, portrait: boolean): CameraPose {
+  const frame = (portrait ? inspectionPortraitFrames : inspectionFrames)[part];
+  solveOrbitPose(frame, portrait ? 0.46 : 16 / 9, inspectionPose);
+  craftLocalToWorld(inspectionTargets[part], inspectionWorld);
+  for (let axis = 0; axis < 3; axis += 1) {
+    const offset = (inspectionWorld[axis] ?? 0) - (CRAFT_POSITION[axis] ?? 0);
+    inspectionPose.position[axis] = (inspectionPose.position[axis] ?? 0) + offset;
+    inspectionPose.target[axis] = (inspectionPose.target[axis] ?? 0) + offset;
+  }
+  return inspectionPose;
 }

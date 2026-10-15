@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal, useFrame } from '@react-three/fiber';
-import { PlaneGeometry, Scene, ShaderMaterial, type Mesh } from 'three';
+import { Scene, ShaderMaterial, type Mesh } from 'three';
 import { stories } from '@/data/stories';
 import { useMeridianStore } from '@/store';
 import { createStoryMaterial, STORY_STILL_TIME, storyQuality, type StoryVisualKind } from '../materials/storyMaterials';
+import { fullscreenQuad } from '../materials/quadGeometry';
 import { PanelPass, usePanelLayer } from '../panels/PanelPass';
 
 /*
@@ -38,13 +39,11 @@ function StoryLayer({ panel, visual, order }: StoryLayerProps) {
   const tier = useMeridianStore((state) => state.tier);
   const quality = storyQuality[tier];
   const [scene] = useState(() => new Scene());
-  const geometry = useMemo(() => new PlaneGeometry(2, 2), []);
   const material = useMemo(() => createStoryMaterial(visual, quality), [visual, quality]);
   const clock = useRef(STORY_STILL_TIME);
   const quad = useRef<Mesh>(null);
 
   useEffect(() => () => material.dispose(), [material]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
 
   const options = useMemo(
     () => ({
@@ -72,7 +71,7 @@ function StoryLayer({ panel, visual, order }: StoryLayerProps) {
   });
 
   return createPortal(
-    <mesh ref={quad} geometry={geometry} material={material} frustumCulled={false} />,
+    <mesh ref={quad} geometry={fullscreenQuad} material={material} frustumCulled={false} />,
     scene,
   );
 }

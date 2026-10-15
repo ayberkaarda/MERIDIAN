@@ -54,3 +54,15 @@ export const craftAnchors: CraftAnchor[] = craftAnchorsLocal.map(({ id, position
   normal: toWorldDirection(normal),
   minFacing,
 }));
+
+const displaced: [number, number, number] = [0, 0, 0];
+/** Translation-only inspection groups keep their original facing normals. */
+export function moveCraftAnchor(index: number, x: number, y: number, z: number): void {
+  const local = craftAnchorsLocal[index];
+  const anchor = craftAnchors[index];
+  if (!local || !anchor) return;
+  displaced[0] = local.position[0] + x;
+  displaced[1] = local.position[1] + y;
+  displaced[2] = local.position[2] + z;
+  craftLocalToWorld(displaced, anchor.position);
+}

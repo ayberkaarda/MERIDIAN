@@ -148,6 +148,27 @@
     }
   }
 
+  /*
+   * Pre-reveal states, held by CSS from the first paint so nothing shows and
+   * then hides when the motion library arrives; the triggered reveal starts
+   * from these same values. `data-revealed` releases them if motion is
+   * unavailable.
+   */
+  .story:not([data-revealed]) [data-story-reveal] {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .story:not([data-revealed]) [data-story-reveal] {
+      transform: translateY(40%);
+    }
+
+    .story:not([data-revealed]) .story__panel {
+      clip-path: inset(100% 0% 0% 0%);
+      transform: scale(1.12);
+    }
+  }
+
   /* Desktop: the panel and the text alternate sides. */
   @media (width >= 48rem) {
     .stories__body {

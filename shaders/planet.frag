@@ -6,6 +6,8 @@ uniform vec3 uLightColor;
 uniform vec3 uRimColor;
 uniform float uTime;
 uniform float uSaturation;
+// Overall surface gain (1 = hero); the closing act lowers it behind the type.
+uniform float uExposure;
 
 varying vec3 vObjectPosition;
 varying vec3 vWorldPosition;
@@ -76,7 +78,7 @@ void main() {
   // At departure distances the body reads as a faint point, not a lit disc.
   color *= mix(1.0, 0.72, smoothstep(24.0, 320.0, vCameraDistance));
 
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color * uExposure, 1.0);
 
   #include <tonemapping_fragment>
   #include <colorspace_fragment>

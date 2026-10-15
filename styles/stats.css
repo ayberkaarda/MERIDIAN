@@ -102,4 +102,23 @@
       font-size: clamp(64px, 7.2vw, 132px);
     }
   }
+
+  /*
+   * Tablet: the 2 x 2 field is too narrow beside the heading column for the
+   * widest figures, so the heading sits on top and figures keep one per row.
+   */
+  @media (48rem <= width < 64rem) {
+    .stats__stage {
+      grid-template-columns: minmax(0, 1fr);
+      padding-inline-end: calc(var(--gutter) + 9rem);
+    }
+
+    .stats__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .stats__figure {
+      font-size: clamp(64px, 11vw, 104px);
+    }
+  }
 }

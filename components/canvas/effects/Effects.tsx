@@ -3,6 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import { ShaderMaterial, type Mesh } from 'three';
 import { useMeridianStore } from '@/store';
 import { createGrainMaterial, grainQuality } from '../materials/grainMaterial';
+import { fullscreenQuad } from '../materials/quadGeometry';
+import { setAnimating } from '../frameDemand';
+
+const ANIMATION_KEY = 'grain';
 
 /**
  * Film grain and vignette as a single full-screen overlay drawn last.
@@ -21,6 +25,7 @@ function GrainOverlay() {
   const overlay = useRef<Mesh>(null);
 
   useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => setAnimating(ANIMATION_KEY, false), []);
 
   useFrame(({ size }, delta) => {
     const target = overlay.current?.material;
@@ -28,14 +33,14 @@ function GrainOverlay() {
     const aspect = target.uniforms.uAspect;
     if (aspect) aspect.value = size.width / Math.max(1, size.height);
     // Reduced motion keeps a fixed grain pattern.
-    if (useMeridianStore.getState().reducedMotion) return;
+    const reduced = useMeridianStore.getState().reducedMotion;
+    setAnimating(ANIMATION_KEY, !reduced);
+    if (reduced) return;
     const time = target.uniforms.uTime;
     if (time) time.value += Math.min(delta, 0.1);
   });
 
   return (
-    <mesh ref={overlay} material={material} frustumCulled={false} renderOrder={1000}>
-      <planeGeometry args={[2, 2]} />
-    </mesh>
+    <mesh ref={overlay} geometry={fullscreenQuad} material={material} frustumCulled={false} renderOrder={1000} />
   );
 }

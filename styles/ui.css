@@ -127,6 +127,21 @@
   }
 
   /* Header */
+  /* Persistent controls keep a stable contrast pair while the scene changes. */
+  .site-header,
+  .progress-rail,
+  .progress-bar {
+    --chrome-surface: rgb(3 3 3 / 0.96);
+    --chrome-ink: var(--ink-light);
+    --chrome-muted: var(--muted);
+  }
+
+  :root[data-theme="light"] :is(.site-header, .progress-rail, .progress-bar) {
+    --chrome-surface: rgb(244 241 234 / 0.96);
+    --chrome-ink: var(--ink-dark);
+    --chrome-muted: var(--muted-on-light);
+  }
+
   .site-header {
     position: fixed;
     inset-inline: 0;
@@ -137,8 +152,8 @@
     justify-content: space-between;
     height: var(--header-height);
     padding-inline: var(--gutter);
-    color: var(--ink-light);
-    mix-blend-mode: difference;
+    color: var(--chrome-ink);
+    background-color: var(--chrome-surface);
     pointer-events: none;
   }
 
@@ -400,10 +415,18 @@
       z-index: var(--z-rail);
       display: flex;
       gap: var(--space-2);
-      color: var(--ink-light);
-      mix-blend-mode: difference;
+      color: var(--chrome-ink);
+      isolation: isolate;
       pointer-events: none;
       transform: translateY(-50%);
+    }
+
+    .progress-rail::before {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--space-1));
+      z-index: -1;
+      background-color: var(--chrome-surface);
     }
   }
 
@@ -432,7 +455,7 @@
 
   .progress-rail__numeral {
     width: 3.5ch;
-    color: var(--muted);
+    color: var(--chrome-muted);
     transition: color var(--motion-s) var(--ease-reveal);
   }
 
@@ -441,7 +464,7 @@
   }
 
   .progress-rail__item[data-active="true"] .progress-rail__numeral {
-    color: var(--ink-light);
+    color: var(--chrome-ink);
   }
 
   .progress-rail__track,
@@ -473,8 +496,8 @@
     bottom: 0;
     z-index: var(--z-rail);
     padding: 0 var(--gutter) max(var(--space-2), env(safe-area-inset-bottom));
-    color: var(--ink-light);
-    mix-blend-mode: difference;
+    color: var(--chrome-ink);
+    background-color: var(--chrome-surface);
     pointer-events: none;
   }
 

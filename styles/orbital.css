@@ -76,6 +76,88 @@
     gap: var(--space-1);
   }
 
+  .orbit-inspector {
+    grid-area: legend;
+    position: relative;
+    z-index: 1;
+    width: min(100%, 25rem);
+    padding: var(--space-2);
+    background: rgb(3 3 3 / 0.94);
+    color: var(--ink-light);
+    border-top: var(--hairline) solid var(--hairline-soft);
+  }
+
+  .orbit-inspector .orbital__legend {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+    justify-content: space-between;
+  }
+
+  .orbit-inspector__select,
+  .orbit-inspector__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .orbit-inspector__select[aria-pressed="true"] {
+    color: var(--ink-light);
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+
+  .orbit-inspector__select:focus-visible,
+  .orbit-inspector__reset:focus-visible {
+    outline: 2px solid var(--ink-light);
+    outline-offset: 4px;
+  }
+
+  .orbit-inspector__select[aria-pressed="true"] .orbital__legend-tick {
+    background: currentColor;
+  }
+
+  .orbit-inspector__description {
+    min-height: 6em;
+    margin: var(--space-1) 0 0;
+    max-width: 34ch;
+    font-size: 14px;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .orbit-inspector__reset {
+    color: var(--ink-light);
+    justify-content: space-between;
+    width: 100%;
+    margin-top: var(--space-1);
+    border-top: var(--hairline) solid var(--hairline-soft);
+  }
+
+  .orbit-inspector__reset:disabled {
+    color: var(--muted);
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    .orbit-inspector__select:hover,
+    .orbit-inspector__reset:not(:disabled):hover { color: var(--ink-light); text-decoration: underline; text-underline-offset: 6px; }
+  }
+
+  @media (width < 48rem) {
+    .orbit-inspector { padding: var(--space-1) 0; }
+    .orbit-inspector__select { gap: 5px; }
+    .orbit-inspector__description { min-height: 6em; }
+  }
+
   /* Ring index: one, two, three hairline arcs echo the three inclinations. */
   .orbital__legend-tick {
     display: inline-block;
@@ -118,7 +200,7 @@
   }
 
   /*
-   * Desktop: heading upper left, the legend stacked lower right as a key to
+   * Desktop: heading upper left, the inspector lower left beside
    * the rings, the approach hairline as the floor of the stage.
    */
   @media (width >= 48rem) {
@@ -128,7 +210,7 @@
       grid-template-areas:
         "head ."
         ". ."
-        ". legend"
+        "legend ."
         "line line";
       padding-block-end: var(--space-6);
       /* Right margin stays free for the progress rail. */

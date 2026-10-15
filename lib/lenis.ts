@@ -1,4 +1,4 @@
-import Lenis from 'lenis';
+import type Lenis from 'lenis';
 import { gsap, ScrollTrigger, registerGsap } from './gsap';
 
 export interface LenisController {
@@ -22,10 +22,13 @@ export function addRenderTick(callback: () => void): () => void {
   };
 }
 
-export function createLenis(reducedMotion = false): LenisController | null {
+export async function createLenis(reducedMotion = false): Promise<LenisController | null> {
   if (typeof window === 'undefined' || reducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  const { default: Lenis } = await import('lenis');
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
   registerGsap();
   const lenis = new Lenis({ lerp: 0.09, syncTouch: false, autoRaf: false });
+  lenis.scrollTo(window.scrollY, { immediate: true });
   const tick = (time: number): void => lenis.raf(time * 1000);
   const update = (): void => { ScrollTrigger.update(); };
   lenis.on('scroll', update);

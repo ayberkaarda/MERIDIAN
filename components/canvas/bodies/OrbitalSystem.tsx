@@ -13,11 +13,13 @@ import {
   type Mesh,
   type Object3D,
 } from 'three';
-import { copy } from '@/data/copy';
-import { useMeridianStore } from '@/store';
-import { ORBITAL_CORE_POSITION } from '../cameraPath';
+import { publishOrbitalLabelPoints, useMeridianStore } from '@/store';
+import { getScenePhase, ORBITAL_CORE_POSITION } from '../cameraPath';
 import { createFacetMaterial, createLineMaterial, orbitalQuality } from '../materials/orbitalMaterial';
 import { OrbitalSystemRing, type RingDefinition } from './OrbitalSystemRing';
+import { publishSceneLabels } from './sceneLabels';
+import { setAnimating } from '../frameDemand';
+import { inspectionDuration, inspectionEase } from '../inspectionMotion';
 
 const RINGS: readonly RingDefinition[] = [
   { radius: 1.9, inclination: [0.34, 0, 0.1], speed: 0.3, labelAngle: -0.35, seed: 101 },
@@ -48,6 +50,7 @@ const LABEL_EXIT_START = 0.9;
 const SYSTEM_EXIT_START = 0.88;
 
 const core = new Vector3(...ORBITAL_CORE_POSITION);
+const ANIMATION_KEY = 'orbital';
 
 /** Facet materials take the fade as a uniform, hairlines as opacity. */
 function applyFade(object: Object3D | null | undefined, value: number): void {
@@ -73,8 +76,15 @@ export function OrbitalSystem() {
   const latticeLines = useRef<LineSegments>(null);
   const ringLine = useRef<Object3D | null>(null);
   const spins = useRef<(Group | null)[]>([]);
-  const labels = useRef<(HTMLSpanElement | null)[]>([]);
-  const labelOpacity = useRef(-1);
+  const formations = useRef<(Group | null)[]>([]);
+  const formationState = useRef({
+    selected: null as number | null,
+    elapsed: inspectionDuration,
+    tiltX: 0,
+    tiltY: 0,
+    poses: RINGS.map(() => ({ fromPosition: new Vector3(), toPosition: new Vector3(), fromRotation: new Vector3(), toRotation: new Vector3(), fromScale: 1, toScale: 1 })),
+  });
+  const anchors = useRef<(Object3D | null)[]>([]);
   const speed = useRef(1);
   const drift = useRef(0);
 
@@ -103,37 +113,66 @@ export function OrbitalSystem() {
   useEffect(() => () => coreGeometry.dispose(), [coreGeometry]);
   useEffect(() => () => latticeGeometry.dispose(), [latticeGeometry]);
   useEffect(() => () => bodyGeometry.dispose(), [bodyGeometry]);
+  useEffect(() => () => {
+    setAnimating(ANIMATION_KEY, false);
+    const state = useMeridianStore.getState();
+    state.orbitalLabelOpacity = 0;
+    for (const point of state.orbitalLabelPoints) point.visible = false;
+    publishOrbitalLabelPoints();
+  }, []);
 
   const spinRefs = useMemo(
     () => RINGS.map((_, index) => (group: Group | null) => { spins.current[index] = group; }),
     [],
   );
-  const labelRefs = useMemo(
-    () => RINGS.map((_, index) => (element: HTMLSpanElement | null) => { labels.current[index] = element; }),
+  const formationRefs = useMemo(() => RINGS.map((_, index) => (group: Group | null) => { formations.current[index] = group; }), []);
+  const anchorRefs = useMemo(
+    () => RINGS.map((_, index) => (anchor: Object3D | null) => { anchors.current[index] = anchor; }),
     [],
   );
-
   const setRingLine = useCallback((line: Object3D | null) => {
     ringLine.current = line;
   }, []);
 
-  const setLabelOpacity = useCallback((opacity: number) => {
-    // Style writes only when the value moves; nothing here reads layout.
-    const previous = labelOpacity.current;
-    if (opacity === previous || (opacity > 0 && opacity < 1 && Math.abs(opacity - previous) < 0.01)) return;
-    labelOpacity.current = opacity;
-    for (const element of labels.current) {
-      if (!element) continue;
-      element.style.opacity = opacity.toFixed(3);
-      element.style.visibility = opacity > 0 ? 'visible' : 'hidden';
-    }
-  }, []);
-
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera, size }, delta) => {
+    const formation = formationState.current;
     const group = root.current;
     if (!group) return;
     const state = useMeridianStore.getState();
     const step = Math.min(delta, 0.1);
+    const selected = state.activeAct === 'transit' ? state.selectedOrbit : null;
+    if (formation.selected !== selected) {
+      formation.selected = selected;
+      formation.elapsed = 0;
+      formation.tiltX = tilt.current?.rotation.x ?? 0;
+      formation.tiltY = tilt.current?.rotation.y ?? 0;
+      for (let index = 0; index < RINGS.length; index += 1) {
+        const node = formations.current[index];
+        const target = formation.poses[index];
+        if (!node || !target) continue;
+        target.fromPosition.copy(node.position);
+        target.fromRotation.set(node.rotation.x, node.rotation.y, node.rotation.z);
+        target.fromScale = node.scale.x;
+        const chosen = index === selected;
+        target.toPosition.set(selected === null ? 0 : chosen ? 0 : (index - selected) * 0.75, selected === null ? 0 : chosen ? 0.2 : (index - selected) * 0.65, selected === null ? 0 : chosen ? 1.4 : -0.9);
+        target.toRotation.set(selected === null ? 0 : chosen ? 0.6 : -0.15, selected === null ? 0 : chosen ? -0.2 : 0.16 * (index - (selected ?? 0)), 0);
+        target.toScale = selected === null || chosen ? 1 : 0.78;
+      }
+    }
+    formation.elapsed = state.reducedMotion ? inspectionDuration : Math.min(inspectionDuration, formation.elapsed + step);
+    const assembled = inspectionEase(formation.elapsed / inspectionDuration);
+    for (let index = 0; index < RINGS.length; index += 1) {
+      const node = formations.current[index];
+      const target = formation.poses[index];
+      if (!node || !target) continue;
+      node.position.lerpVectors(target.fromPosition, target.toPosition, assembled);
+      node.rotation.set(
+        MathUtils.lerp(target.fromRotation.x, target.toRotation.x, assembled),
+        MathUtils.lerp(target.fromRotation.y, target.toRotation.y, assembled),
+        MathUtils.lerp(target.fromRotation.z, target.toRotation.z, assembled),
+      );
+      node.scale.setScalar(MathUtils.lerp(target.fromScale, target.toScale, assembled));
+    }
 
     // Fade by camera distance: the system is out of view and culled during Act I.
     const distance = camera.position.distanceTo(core);
@@ -141,14 +180,18 @@ export function OrbitalSystem() {
     // behind the timeline and technology sections (orbitProgress holds at 1 there).
     const approachFade = MathUtils.smoothstep(FADE_FAR - distance, 0, FADE_FAR - FADE_NEAR);
     const exitFade = 1 - MathUtils.smoothstep(state.orbitProgress, SYSTEM_EXIT_START, 1);
-    const fade = approachFade * exitFade;
-    group.visible = fade > 0.001;
+    const fade = selected !== null ? 1 : approachFade * exitFade;
+    // Nothing of the system is drawn outside the camera path (craft, return).
+    group.visible = fade > 0.001 && getScenePhase(state) === 'path';
     // Labels belong to the orbital pin only: hidden before it, faded out over its
     // last stretch and kept hidden through the timeline and technology sections.
-    const inOrbit = state.activeAct === 'transit' && state.orbitProgress > 0 && state.orbitProgress < 1;
+    const inOrbit = state.activeAct === 'transit' && (selected !== null || (state.orbitProgress > 0 && state.orbitProgress < 1));
     const labelExit = 1 - MathUtils.smoothstep(state.orbitProgress, LABEL_EXIT_START, 1);
     const labelApproach = MathUtils.smoothstep(LABEL_FAR - distance, 0, LABEL_FAR - LABEL_NEAR);
-    setLabelOpacity(group.visible && inOrbit ? labelApproach * labelExit : 0);
+    const opacity = group.visible && inOrbit ? selected !== null ? 1 : labelApproach * labelExit : 0;
+    publishSceneLabels(anchors.current, camera, size.width, size.height, opacity);
+    // Rings turn and the attitude drifts on their own unless motion is reduced.
+    setAnimating(ANIMATION_KEY, group.visible && ((!state.reducedMotion && selected === null) || assembled < 1));
     if (!group.visible) return;
 
     // Materials are shared, so fading one object of each kind fades them all.
@@ -157,7 +200,7 @@ export function OrbitalSystem() {
     applyFade(ringLine.current, RING_OPACITY * fade);
     applyFade(latticeLines.current, LATTICE_OPACITY * fade);
 
-    const reduced = state.reducedMotion;
+    const reduced = state.reducedMotion || selected !== null;
     // Reduced motion: rings come to rest and the system holds its resting attitude.
     const targetSpeed = reduced ? 0 : 1 + SPEED_GAIN * state.orbitProgress;
     speed.current = reduced ? 0 : MathUtils.damp(speed.current, targetSpeed, SPEED_DAMPING, step);
@@ -177,8 +220,8 @@ export function OrbitalSystem() {
           tiltY = state.pointer.normalizedX * MAX_TILT;
         }
       }
-      pivot.rotation.x = reduced ? 0 : MathUtils.damp(pivot.rotation.x, tiltX, TILT_DAMPING, step);
-      pivot.rotation.y = reduced ? 0 : MathUtils.damp(pivot.rotation.y, tiltY, TILT_DAMPING, step);
+      pivot.rotation.x = state.reducedMotion ? 0 : selected !== null ? MathUtils.lerp(formation.tiltX, 0, assembled) : MathUtils.damp(pivot.rotation.x, tiltX, TILT_DAMPING, step);
+      pivot.rotation.y = state.reducedMotion ? 0 : selected !== null ? MathUtils.lerp(formation.tiltY, 0, assembled) : MathUtils.damp(pivot.rotation.y, tiltY, TILT_DAMPING, step);
     }
 
     if (speed.current === 0) return;
@@ -206,14 +249,14 @@ export function OrbitalSystem() {
             <OrbitalSystemRing
               key={ring.seed}
               ring={ring}
-              label={copy.orbitalSystem.labels[index] ?? ''}
               bodyCount={quality.bodies[index] ?? 0}
               segments={quality.ringSegments}
               bodyGeometry={bodyGeometry}
               bodyMaterial={bodyMaterial}
               lineMaterial={ringMaterial}
               spinRef={spinRefs[index] ?? (() => undefined)}
-              labelRef={labelRefs[index] ?? (() => undefined)}
+              formationRef={formationRefs[index] ?? (() => undefined)}
+              anchorRef={anchorRefs[index] ?? (() => undefined)}
               lineRef={index === 0 ? setRingLine : undefined}
             />
           ))}

@@ -7,6 +7,11 @@
  */
 
 @layer components {
+  .craft-inspector button:focus-visible {
+    outline: 2px solid var(--ink-light);
+    outline-offset: 4px;
+  }
+
   .craft {
     position: relative;
     overflow-x: clip;
@@ -115,6 +120,83 @@
 
   .craft__label-index {
     color: var(--theme-muted);
+  }
+
+  .craft-inspector {
+    grid-area: labels;
+    position: relative;
+    z-index: 1;
+    width: min(100%, 25rem);
+    padding: var(--space-2);
+    color: var(--ink-light);
+    background: rgb(3 3 3 / 0.94);
+    border-top: var(--hairline) solid var(--hairline-soft);
+  }
+
+  .craft-inspector .craft__labels {
+    position: static;
+    display: grid;
+    gap: 0;
+    justify-items: stretch;
+  }
+
+  .craft-inspector .craft__label {
+    position: static;
+    display: block;
+    padding: 0;
+    /* Inspection controls remain available before every narrative label cue. */
+    opacity: 1 !important;
+  }
+
+  .craft-inspector .craft__label-index { color: var(--muted); }
+
+  .craft-inspector__select,
+  .craft-inspector__reset {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .craft-inspector__select[aria-pressed="true"] {
+    color: var(--ink-light);
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+
+  .craft-inspector__description {
+    min-height: 6em;
+    margin: var(--space-1) 0 0;
+    max-width: 34ch;
+    font-size: 14px;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .craft-inspector__reset {
+    justify-content: space-between;
+    margin-top: var(--space-1);
+    border-top: var(--hairline) solid var(--hairline-soft);
+    color: var(--ink-light);
+  }
+
+  .craft-inspector__reset:disabled { color: var(--muted); cursor: default; }
+
+  @media (hover: hover) {
+    .craft-inspector__select:hover,
+    .craft-inspector__reset:not(:disabled):hover { color: var(--ink-light); text-decoration: underline; text-underline-offset: 6px; }
+  }
+
+  @media (width < 48rem) {
+    .craft-inspector { padding: var(--space-1) 0; }
   }
 
   .craft__distance {

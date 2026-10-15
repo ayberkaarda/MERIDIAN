@@ -1,5 +1,4 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Html } from '@react-three/drei';
 import {
   BufferGeometry,
   Euler,
@@ -29,7 +28,6 @@ export interface RingDefinition {
 
 interface OrbitalSystemRingProps {
   ring: RingDefinition;
-  label: string;
   bodyCount: number;
   segments: number;
   bodyGeometry: Geometry;
@@ -37,31 +35,12 @@ interface OrbitalSystemRingProps {
   lineMaterial: LineBasicMaterial;
   /** Receives the spinning group so the parent can advance it in its own frame loop. */
   spinRef: (group: Group | null) => void;
-  /** Receives the label element so the parent can fade it without React state. */
-  labelRef: (element: HTMLSpanElement | null) => void;
+  formationRef: (group: Group | null) => void;
+  /** Receives the label anchor on the ring; the parent projects it to place the label. */
+  anchorRef: (anchor: Object3D | null) => void;
   /** Optionally receives the ring line, which carries the shared hairline material. */
   lineRef?: (line: Object3D | null) => void;
 }
-
-const LABEL_STYLE = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  transform: 'translate(-1px, -50%)',
-  fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-  fontSize: 'var(--font-meta-size, 11px)',
-  letterSpacing: 'var(--font-meta-tracking, 0.12em)',
-  textTransform: 'uppercase',
-  lineHeight: 1,
-  color: 'var(--muted)',
-  whiteSpace: 'nowrap',
-  opacity: 0,
-  visibility: 'hidden',
-  userSelect: 'none',
-  pointerEvents: 'none',
-} as const;
-
-const LEADER_STYLE = { display: 'block', width: '16px', height: '1px', background: 'currentColor', opacity: 0.6 } as const;
 
 /** Small deterministic PRNG so the belt layout is identical on every load and tier. */
 function mulberry32(seed: number): () => number {
@@ -89,14 +68,14 @@ function createRingGeometry(radius: number, segments: number): BufferGeometry {
 
 export function OrbitalSystemRing({
   ring,
-  label,
   bodyCount,
   segments,
   bodyGeometry,
   bodyMaterial,
   lineMaterial,
   spinRef,
-  labelRef,
+  formationRef,
+  anchorRef,
   lineRef,
 }: OrbitalSystemRingProps) {
   const bodies = useRef<InstancedMesh>(null);
@@ -135,6 +114,7 @@ export function OrbitalSystemRing({
   );
 
   return (
+    <group ref={formationRef}>
     <group rotation={[ring.inclination[0], ring.inclination[1], ring.inclination[2]]}>
       <lineLoop ref={lineRef} geometry={loop} material={lineMaterial} />
       <group ref={spinRef}>
@@ -145,12 +125,8 @@ export function OrbitalSystemRing({
           frustumCulled={false}
         />
       </group>
-      <Html position={labelPosition} pointerEvents="none" zIndexRange={[2, 0]}>
-        <span ref={labelRef} aria-hidden="true" style={LABEL_STYLE}>
-          <span style={LEADER_STYLE} />
-          {label}
-        </span>
-      </Html>
+      <object3D ref={anchorRef} position={labelPosition} />
+    </group>
     </group>
   );
 }

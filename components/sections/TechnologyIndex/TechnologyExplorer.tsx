@@ -6,9 +6,10 @@ import { motionCssVars } from '@/components/ui/motion-presets';
 import { technologies, type Technology } from '@/data/technologies';
 import { useFocusZone } from '@/hooks/useFocusZone';
 import { useTechPanelRegistration } from '@/hooks/useTechPanelRegistration';
-import { gsap } from '@/lib/gsap';
 import { durations, easings } from '@/lib/motion';
 import { useMeridianStore } from '@/store';
+
+type GsapModule = typeof import('@/lib/gsap');
 
 const FINE_POINTER_QUERY = '(pointer: fine)';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
@@ -97,6 +98,13 @@ export function TechnologyExplorer({ heading, headingId }: TechnologyExplorerPro
     let target = 0;
     let visible = 0;
     let swap: gsap.core.Timeline | null = null;
+    let disposed = false;
+    // The motion library loads off the critical path; until it lands a
+    // selection swaps the visual directly, without the wipe.
+    let animate: GsapModule['gsap'] | null = null;
+    void import('@/lib/gsap').then((module) => {
+      if (!disposed) animate = module.gsap;
+    });
 
     const commit = (index: number): void => {
       visible = index;
@@ -106,11 +114,11 @@ export function TechnologyExplorer({ heading, headingId }: TechnologyExplorerPro
 
     const run = (): void => {
       if (swap || target === visible) return;
-      if (!shutter) {
+      if (!shutter || !animate) {
         commit(target);
         return;
       }
-      const timeline = gsap.timeline({
+      const timeline = animate.timeline({
         defaults: { ease: easings.reveal },
         onComplete: () => {
           swap = null;
@@ -144,6 +152,7 @@ export function TechnologyExplorer({ heading, headingId }: TechnologyExplorerPro
     };
 
     return () => {
+      disposed = true;
       swap?.kill();
       controllerRef.current = null;
     };

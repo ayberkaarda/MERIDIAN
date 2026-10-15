@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { createPortal, useFrame } from '@react-three/fiber';
-import { PlaneGeometry, Scene, ShaderMaterial, type Mesh } from 'three';
+import { Scene, ShaderMaterial, type Mesh } from 'three';
 import { technologies } from '@/data/technologies';
 import { durations } from '@/lib/motion';
 import { useMeridianStore } from '@/store';
 import { createTechMaterial, TECH_STILL_TIME, techQuality } from '../materials/techMaterials';
+import { fullscreenQuad } from '../materials/quadGeometry';
+import { setAnimating } from '../frameDemand';
 import { PanelPass, usePanelLayer } from '../panels/PanelPass';
 
 /*
@@ -14,6 +16,7 @@ import { PanelPass, usePanelLayer } from '../panels/PanelPass';
  */
 const PANEL_ORDER_CURRENT = 2;
 const PANEL_ORDER_PREVIOUS = 1;
+const ANIMATION_KEY = 'tech-swap';
 
 export function TechnologyVisual() {
   const panel = useMeridianStore((state) => state.techPanel);
@@ -48,13 +51,12 @@ function TechnologyPanels({ aspect: panelAspect }: { aspect: RefObject<number> }
   const tier = useMeridianStore((state) => state.tier);
   const quality = techQuality[tier];
   const materials = useMemo(() => technologies.map((item) => createTechMaterial(item.visual, quality)), [quality]);
-  const geometry = useMemo(() => new PlaneGeometry(2, 2), []);
   const meshes = useRef<(Mesh | null)[]>([]);
   const transition = useRef<Transition>({ current: -1, previous: -1, progress: 1 });
   const clock = useRef(TECH_STILL_TIME);
 
   useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => setAnimating(ANIMATION_KEY, false), []);
 
   const meshRefs = useMemo(
     () => technologies.map((_, index) => (mesh: Mesh | null) => { meshes.current[index] = mesh; }),
@@ -80,6 +82,8 @@ function TechnologyPanels({ aspect: panelAspect }: { aspect: RefObject<number> }
       swap.progress = quality.animated && store.reducedMotion ? 0 : 1;
     }
     if (swap.progress < 1) swap.progress = Math.min(1, swap.progress + step / durations.m);
+    // A blend in progress keeps frames coming even when nothing else moves.
+    setAnimating(ANIMATION_KEY, swap.progress < 1);
 
     // Reduced motion freezes every field.
     const running = quality.animated && !store.reducedMotion;
@@ -109,7 +113,7 @@ function TechnologyPanels({ aspect: panelAspect }: { aspect: RefObject<number> }
         <mesh
           key={technologies[index]?.id ?? index}
           ref={meshRefs[index]}
-          geometry={geometry}
+          geometry={fullscreenQuad}
           material={material}
           frustumCulled={false}
           visible={false}

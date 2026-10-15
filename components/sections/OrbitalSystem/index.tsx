@@ -1,6 +1,7 @@
 import { MonoMeta } from '@/components/typography/MonoMeta';
 import { acts, copy } from '@/data/copy';
 import { OrbitalChoreography } from './OrbitalChoreography';
+import { OrbitInspectionControls } from './OrbitInspectionControls';
 
 const transit = acts.find((act) => act.id === 'transit');
 
@@ -11,7 +12,7 @@ const transit = acts.find((act) => act.id === 'transit');
  * `data-orbit-pin` marks the pinned range read by the orbit scroll bridge.
  */
 export default function OrbitalSystem() {
-  const { heading, labels } = copy.orbitalSystem;
+  const { heading } = copy.orbitalSystem;
   return (
     <section
       id="transit"
@@ -31,14 +32,7 @@ export default function OrbitalSystem() {
             {heading}
           </h2>
         </header>
-        <ol className="orbital__legend type-meta">
-          {labels.map((label, index) => (
-            <li key={label} className="orbital__legend-item" data-orbital-reveal="">
-              <span aria-hidden="true" className="orbital__legend-tick" data-ring={index + 1} />
-              <span>{label}</span>
-            </li>
-          ))}
-        </ol>
+        <OrbitInspectionControls />
         <span aria-hidden="true" className="orbital__distance">
           <span className="orbital__distance-fill" data-orbital-distance="" />
         </span>

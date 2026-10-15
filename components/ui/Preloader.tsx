@@ -1,127 +1,79 @@
 "use client";
 
-import { AnimatePresence, motion, type TargetAndTransition, type Variants } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { copy, formatLoadingProgress } from "@/data/copy";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { durations } from "@/lib/motion";
 import { useMeridianStore } from "@/store";
 import { bezier, motionCssVars } from "./motion-presets";
 
-// The exit holds on 100 for one `s` beat, then opens over `l`.
-const exitTransition = { duration: durations.l, ease: bezier.reveal, delay: durations.s };
-const fadeOut = { opacity: 0, transition: exitTransition };
-
-const topPlane: Variants = {
-  visible: { y: "0%", opacity: 1 },
-  exit: (reduced: boolean) => (reduced ? fadeOut : { y: "-100%", transition: exitTransition }),
-};
-
-const bottomPlane: Variants = {
-  visible: { y: "0%", opacity: 1 },
-  exit: (reduced: boolean) => (reduced ? fadeOut : { y: "100%", transition: exitTransition }),
-};
-
-const wordmark: Variants = {
-  visible: { scale: 1, opacity: 1 },
-  exit: (reduced: boolean) =>
-    reduced
-      ? fadeOut
-      : {
-          scale: 1.08,
-          opacity: 0,
-          transition: {
-            scale: exitTransition,
-            opacity: { duration: durations.m, ease: bezier.reveal, delay: durations.s },
-          },
-        },
-};
-
-// A slow, regular metronome; static under reduced motion.
-const SEAM_LOW = 0.16;
-const seamPulse: TargetAndTransition = {
-  opacity: [SEAM_LOW, 0.72],
-  transition: {
-    duration: durations.xl,
-    ease: bezier.camera,
-    repeat: Infinity,
-    repeatType: "mirror",
-  },
-};
-const seamStatic: TargetAndTransition = { opacity: 0.48 };
-const seamExit = { opacity: 0, transition: { duration: durations.xs, ease: bezier.reveal } };
+const easing = (values: readonly number[]) => `cubic-bezier(${values.join(",")})`;
 
 export function Preloader() {
   const progress = useMeridianStore((state) => state.loadingProgress);
   const reduced = useReducedMotion();
   const [exited, setExited] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const loading = progress < 100;
-  const visible = loading && !exited;
 
   useEffect(() => {
     if (!loading) return;
     const root = document.documentElement;
     root.dataset.loading = "true";
-    return () => {
-      delete root.dataset.loading;
-    };
+    return () => { delete root.dataset.loading; };
   }, [loading]);
 
-  const handleExitComplete = (): void => {
-    document.documentElement.dataset.preloader = "complete";
-    setExited(true);
-  };
+  useEffect(() => {
+    const seam = rootRef.current?.querySelector<HTMLElement>(".preloader__seam");
+    if (!seam || !loading) return;
+    const pulse = seam.animate(
+      reduced ? [{ opacity: 0.48 }, { opacity: 0.48 }] : [{ opacity: 0.16 }, { opacity: 0.72 }],
+      { duration: durations.xl * 1000, easing: easing(bezier.camera), iterations: Infinity, direction: "alternate", fill: "both" },
+    );
+    return () => { seam.style.opacity = getComputedStyle(seam).opacity; pulse.cancel(); };
+  }, [loading, reduced]);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (loading || exited || !root) return;
+    let disposed = false;
+    const animations: Animation[] = [];
+    const play = (selector: string, frames: Keyframe[], duration: number = durations.l, delay: number = durations.s) => {
+      const element = root.querySelector<HTMLElement>(selector);
+      if (!element) return;
+      const animation = element.animate(frames, {
+        duration: duration * 1000, delay: delay * 1000, easing: easing(bezier.reveal), fill: "both",
+      });
+      animations.push(animation);
+    };
+    play(".preloader__plane--top", reduced ? [{ opacity: 1 }, { opacity: 0 }] : [{ transform: "translateY(0%)" }, { transform: "translateY(-100%)" }]);
+    play(".preloader__plane--bottom", reduced ? [{ opacity: 1 }, { opacity: 0 }] : [{ transform: "translateY(0%)" }, { transform: "translateY(100%)" }]);
+    if (!reduced) play(".preloader__wordmark", [{ transform: "scale(1)" }, { transform: "scale(1.08)" }]);
+    play(".preloader__wordmark", [{ opacity: 1 }, { opacity: 0 }], reduced ? durations.l : durations.m);
+    const seam = root.querySelector<HTMLElement>(".preloader__seam");
+    play(".preloader__seam", [{ opacity: seam ? getComputedStyle(seam).opacity : 0.16 }, { opacity: 0 }], durations.xs, 0);
+    void Promise.all(animations.map((animation) => animation.finished)).then(() => {
+      if (disposed) return;
+      document.documentElement.dataset.preloader = "complete";
+      setExited(true);
+    }).catch(() => {});
+    return () => { disposed = true; animations.forEach((animation) => animation.cancel()); };
+  }, [loading, reduced, exited]);
+
+  if (exited) return null;
   return (
-    <AnimatePresence custom={reduced} onExitComplete={handleExitComplete}>
-      {visible ? (
-        <motion.div
-          key="preloader"
-          className="preloader"
-          style={motionCssVars}
-          initial={false}
-          animate="visible"
-          exit="exit"
-        >
-          <motion.div
-            className="preloader__plane preloader__plane--top"
-            variants={topPlane}
-            custom={reduced}
-          />
-          <motion.div
-            className="preloader__plane preloader__plane--bottom"
-            variants={bottomPlane}
-            custom={reduced}
-          >
-            <div
-              className="preloader__meta type-meta"
-              role="progressbar"
-              aria-label={copy.preloader.status}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progress)}
-            >
-              <span>{copy.preloader.status}</span>
-              <span className="tabular-nums">{formatLoadingProgress(progress)}</span>
-            </div>
-          </motion.div>
-          <motion.span
-            key={reduced ? "seam-static" : "seam-pulse"}
-            aria-hidden="true"
-            className="preloader__seam"
-            initial={reduced ? seamStatic : { opacity: SEAM_LOW }}
-            animate={reduced ? seamStatic : seamPulse}
-            exit={seamExit}
-          />
-          <motion.p
-            className="preloader__wordmark type-display"
-            variants={wordmark}
-            custom={reduced}
-          >
-            {copy.preloader.wordmark}
-          </motion.p>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    <div ref={rootRef} className="preloader" style={motionCssVars}>
+      <div className="preloader__plane preloader__plane--top" />
+      <div className="preloader__plane preloader__plane--bottom">
+        <div className="preloader__meta type-meta" role="progressbar"
+          aria-label={copy.preloader.status} aria-valuemin={0} aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}>
+          <span>{copy.preloader.status}</span>
+          <span className="tabular-nums">{formatLoadingProgress(progress)}</span>
+        </div>
+      </div>
+      <span aria-hidden="true" className="preloader__seam" style={{ opacity: reduced ? 0.48 : 0.16 }} />
+      <p className="preloader__wordmark type-display">{copy.preloader.wordmark}</p>
+    </div>
   );
 }

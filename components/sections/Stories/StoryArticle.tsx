@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { motionConditions, readConditions } from '@/components/typography/motionQueries';
 import type { Story } from '@/data/stories';
 import { useStoryPanelRegistration } from '@/hooks/useStoryPanelRegistration';
-import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { durations, easings, motion } from '@/lib/motion';
 import { useMeridianStore } from '@/store';
 import { usePanelFallback } from '@/components/sections/panelFallback';
@@ -16,6 +15,82 @@ interface StoryArticleProps {
 
 /** Resting scale the panel settles to from its approach scale. */
 const APPROACH_SCALE = 1.12;
+
+type GsapModule = typeof import('@/lib/gsap');
+
+function choreograph(article: HTMLElement, index: number, { gsap, ScrollTrigger }: GsapModule): () => void {
+  const frame = article.querySelector<HTMLElement>('[data-story-frame]');
+  const panel = article.querySelector<HTMLElement>('[data-story-panel]');
+  const texts = gsap.utils.toArray<HTMLElement>('[data-story-reveal]', article);
+  if (!frame || !panel) {
+    article.dataset.revealed = 'true';
+    return () => {};
+  }
+
+  const active = ScrollTrigger.create({
+    trigger: article,
+    start: 'top 55%',
+    end: 'bottom 55%',
+    onToggle: (self) => {
+      if (self.isActive) useMeridianStore.getState().setActiveStory(index);
+    },
+  });
+  // Once played, the article no longer needs the CSS pre-reveal state.
+  const settle = (): void => {
+    article.dataset.revealed = 'true';
+  };
+
+  const mm = gsap.matchMedia();
+  mm.add(motionConditions, (context) => {
+    const { reduce } = readConditions(context.conditions);
+
+    if (reduce) {
+      const reveal = gsap.timeline({
+        defaults: { duration: durations.m, ease: easings.reveal },
+        scrollTrigger: { trigger: frame, start: 'top 80%', once: true },
+        onComplete: settle,
+      });
+      // The panel itself is drawn by the scene and cannot fade; only the text does.
+      reveal.fromTo(texts, { opacity: 0 }, { opacity: 1, stagger: motion.headlineStagger }, 0);
+      return;
+    }
+
+    const reveal = gsap.timeline({
+      defaults: { ease: easings.reveal },
+      scrollTrigger: { trigger: frame, start: 'top 80%', once: true },
+      onComplete: settle,
+    });
+    reveal
+      .fromTo(
+        panel,
+        { clipPath: 'inset(100% 0% 0% 0%)' },
+        { clipPath: 'inset(0% 0% 0% 0%)', duration: durations.l },
+        0,
+      )
+      .fromTo(
+        texts,
+        // `y: 0` discards the px offset parsed from the CSS pre-reveal transform.
+        { opacity: 0, y: 0, yPercent: 40 },
+        { opacity: 1, y: 0, yPercent: 0, duration: durations.l, stagger: motion.headlineStagger },
+        durations.s,
+      );
+
+    gsap.fromTo(
+      panel,
+      { scale: APPROACH_SCALE },
+      {
+        scale: 1,
+        ease: easings.scrub,
+        scrollTrigger: { trigger: frame, start: 'top bottom', end: 'center center', scrub: true },
+      },
+    );
+  });
+
+  return () => {
+    active.kill();
+    mm.revert();
+  };
+}
 
 /**
  * Act III, arrival beat: what the journey is for, told in three stories.
@@ -38,68 +113,23 @@ export function StoryArticle({ story, index }: StoryArticleProps) {
   useEffect(() => {
     const article = articleRef.current;
     if (!article) return;
-    const frame = article.querySelector<HTMLElement>('[data-story-frame]');
-    const panel = article.querySelector<HTMLElement>('[data-story-panel]');
-    const texts = gsap.utils.toArray<HTMLElement>('[data-story-reveal]', article);
-    if (!frame || !panel) return;
-
-    const active = ScrollTrigger.create({
-      trigger: article,
-      start: 'top 55%',
-      end: 'bottom 55%',
-      onToggle: (self) => {
-        if (self.isActive) useMeridianStore.getState().setActiveStory(index);
-      },
-    });
-
-    const mm = gsap.matchMedia();
-    mm.add(motionConditions, (context) => {
-      const { reduce } = readConditions(context.conditions);
-
-      if (reduce) {
-        const reveal = gsap.timeline({
-          defaults: { duration: durations.m, ease: easings.reveal },
-          scrollTrigger: { trigger: frame, start: 'top 80%', once: true },
-        });
-        // The panel itself is drawn by the scene and cannot fade; only the text does.
-        reveal.fromTo(texts, { opacity: 0 }, { opacity: 1, stagger: motion.headlineStagger }, 0);
-        return;
-      }
-
-      const reveal = gsap.timeline({
-        defaults: { ease: easings.reveal },
-        scrollTrigger: { trigger: frame, start: 'top 80%', once: true },
+    let disposed = false;
+    let dispose: (() => void) | null = null;
+    // The motion library loads off the critical path; CSS holds the
+    // pre-reveal state until it lands (styles/stories.css).
+    void import('@/lib/gsap')
+      .then((module) => {
+        if (!disposed) dispose = choreograph(article, index, module);
+      })
+      .catch(() => {
+        article.dataset.revealed = 'true';
       });
-      reveal
-        .fromTo(
-          panel,
-          { clipPath: 'inset(100% 0% 0% 0%)' },
-          { clipPath: 'inset(0% 0% 0% 0%)', duration: durations.l },
-          0,
-        )
-        .fromTo(
-          texts,
-          { opacity: 0, yPercent: 40 },
-          { opacity: 1, yPercent: 0, duration: durations.l, stagger: motion.headlineStagger },
-          durations.s,
-        );
-
-      gsap.fromTo(
-        panel,
-        { scale: APPROACH_SCALE },
-        {
-          scale: 1,
-          ease: easings.scrub,
-          scrollTrigger: { trigger: frame, start: 'top bottom', end: 'center center', scrub: true },
-        },
-      );
-    });
-
     return () => {
-      active.kill();
-      mm.revert();
+      disposed = true;
+      dispose?.();
     };
   }, [index]);
+
 
   return (
     <article

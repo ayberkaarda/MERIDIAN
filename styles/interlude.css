@@ -58,6 +58,39 @@
     transform-origin: 0% 100%;
   }
 
+  /*
+   * Pre-reveal states, held from the first paint; each entrance starts from
+   * the same values (InterludeStatement). `data-revealed` releases them if
+   * motion is unavailable. Reduced motion: opacity only.
+   */
+  .interlude:not([data-revealed]) .interlude__glyphs {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .interlude:not([data-revealed]) [data-effect="rise"] .interlude__glyphs {
+      opacity: 1;
+      transform: translateY(110%);
+    }
+
+    .interlude:not([data-revealed]) [data-effect="mask-wipe"] .interlude__glyphs {
+      opacity: 1;
+      clip-path: inset(0% 100% 0% 0%);
+    }
+
+    .interlude:not([data-revealed]) [data-effect="scale"] .interlude__glyphs {
+      transform: scale(0.42);
+    }
+
+    .interlude:not([data-revealed]) [data-effect="blur-in"] .interlude__glyphs {
+      filter: blur(24px);
+    }
+
+    .interlude:not([data-revealed]) [data-effect="tracking-in"] .interlude__glyphs {
+      letter-spacing: 0.42em;
+    }
+  }
+
   @media (width >= 48rem) {
     .interlude {
       padding-block: 40svh;

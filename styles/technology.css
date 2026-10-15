@@ -140,7 +140,9 @@
     justify-content: space-between;
     gap: var(--space-2);
     margin: 0;
-    color: var(--theme-muted);
+    color: var(--ink-light);
+    background-color: var(--bg-dark);
+    padding: var(--space-1);
   }
 
   .tech__button {
@@ -208,6 +210,9 @@
 
     .tech__caption {
       position: static;
+      color: var(--theme-muted);
+      background-color: transparent;
+      padding: 0;
     }
 
     .tech__button {

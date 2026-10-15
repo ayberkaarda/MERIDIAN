@@ -23,7 +23,7 @@ export function onPreloaderRelease(onRelease: (delay: number) => void): () => vo
     if (exited()) fire(0);
   });
   const unsubscribe = useMeridianStore.subscribe((state) => {
-    if (state.isLoaded) fire(durations.s * 2);
+    if (state.isLoaded) fire(durations.s);
   });
   function dispose(): void {
     observer.disconnect();
@@ -32,7 +32,7 @@ export function onPreloaderRelease(onRelease: (delay: number) => void): () => vo
 
   observer.observe(root, { attributes: true, attributeFilter: ['data-preloader'] });
   if (exited()) fire(0);
-  else if (useMeridianStore.getState().isLoaded) fire(durations.s * 2);
+  else if (useMeridianStore.getState().isLoaded) fire(durations.s);
 
   return () => {
     done = true;

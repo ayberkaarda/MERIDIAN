@@ -1,6 +1,7 @@
 import { MonoMeta } from '@/components/typography/MonoMeta';
 import { acts, copy } from '@/data/copy';
 import { SpacecraftChoreography } from './SpacecraftChoreography';
+import { CraftInspectionControls } from './CraftInspectionControls';
 
 const arrival = acts.find((act) => act.id === 'arrival');
 
@@ -12,7 +13,7 @@ const arrival = acts.find((act) => act.id === 'arrival');
  * equivalent of the scene anchor it points at; leader lines are decorative.
  */
 export default function Spacecraft() {
-  const { heading, labels } = copy.spacecraft;
+  const { heading } = copy.spacecraft;
   return (
     <section
       id="arrival"
@@ -28,16 +29,7 @@ export default function Spacecraft() {
             {heading}
           </h2>
         </header>
-        <ol className="craft__labels type-meta">
-          {labels.map((label, index) => (
-            <li key={label} className="craft__label" data-craft-label={index} data-slot={index}>
-              <span aria-hidden="true" className="craft__label-index">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <span className="craft__label-text">{label}</span>
-            </li>
-          ))}
-        </ol>
+        <CraftInspectionControls />
         <span aria-hidden="true" className="craft__distance">
           <span className="craft__distance-fill" data-craft-distance="" />
         </span>

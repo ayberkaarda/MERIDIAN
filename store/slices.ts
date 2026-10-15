@@ -1,12 +1,27 @@
 import type { StateCreator } from 'zustand';
 import type { DeviceTier } from '../lib/tiers';
 import type { ActId } from '../data/copy';
+import type { CraftPart } from '../data/inspections';
+
+export interface InspectionSlice {
+  selectedOrbit: number | null;
+  selectedCraftPart: CraftPart | null;
+  selectOrbit: (index: number | null) => void;
+  selectCraftPart: (part: CraftPart | null) => void;
+}
 
 export interface LoadingSlice { loadingProgress: number; isLoaded: boolean; setLoadingProgress: (progress: number) => void }
 export interface ScrollSlice { scrollProgress: number; departureProgress: number; orbitProgress: number; setScrollProgress: (progress: number) => void; setDepartureProgress: (progress: number) => void; setOrbitProgress: (progress: number) => void }
 export interface TechnologySlice { activeTech: number; techPanel: HTMLElement | null; setActiveTech: (index: number) => void; setTechPanel: (element: HTMLElement | null) => void }
 export interface TimelineSlice { timelineIndex: number; setTimelineIndex: (index: number) => void }
 export interface CraftLabelPoint { x: number; y: number; visible: boolean }
+export interface OrbitalLabelPoint { x: number; y: number; visible: boolean }
+export interface SceneBridgeSlice {
+  returnPhaseActive: boolean;
+  orbitalLabelPoints: OrbitalLabelPoint[];
+  orbitalLabelOpacity: number;
+  orbitalViewport: { width: number; height: number };
+}
 export interface ArrivalSlice {
   themeProgress: number;
   setThemeProgress: (progress: number) => void;
@@ -26,7 +41,7 @@ export interface PointerPosition { x: number; y: number; normalizedX: number; no
 export interface PointerSlice { pointer: PointerPosition; setPointer: (pointer: PointerPosition) => void }
 export interface MotionSlice { reducedMotion: boolean; setReducedMotion: (reduced: boolean) => void }
 export interface TierSlice { tier: DeviceTier; setTier: (tier: DeviceTier) => void }
-export type MeridianStore = LoadingSlice & ScrollSlice & ActSlice & PointerSlice & MotionSlice & TierSlice & TechnologySlice & TimelineSlice & ArrivalSlice;
+export type MeridianStore = LoadingSlice & ScrollSlice & ActSlice & PointerSlice & MotionSlice & TierSlice & TechnologySlice & TimelineSlice & ArrivalSlice & SceneBridgeSlice & InspectionSlice;
 type Slice<T> = StateCreator<MeridianStore, [], [], T>;
 const clamp = (value: number, max: number): number => Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : 0;
 export const createArrivalSlice: Slice<ArrivalSlice> = (set) => ({

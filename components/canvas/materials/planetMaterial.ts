@@ -28,6 +28,7 @@ export const PLANET_LIGHT_DIRECTION = new Vector3(1, 0.32, 0.38).normalize();
 const LIGHT_COLOR = new Color(1, 0.975, 0.95);
 const RIM_COLOR = new Color(0.64, 0.68, 0.73);
 export const ATMOSPHERE_SCALE = 1.035;
+export const ATMOSPHERE_INTENSITY = 0.32;
 
 export function createPlanetMaterial(quality: PlanetQuality): ShaderMaterial {
   return new ShaderMaterial({
@@ -44,6 +45,7 @@ export function createPlanetMaterial(quality: PlanetQuality): ShaderMaterial {
       uRimColor: { value: RIM_COLOR.clone() },
       uTime: { value: 0 },
       uSaturation: { value: 0.18 },
+      uExposure: { value: 1 },
     },
   });
 }
@@ -57,7 +59,7 @@ export function createAtmosphereMaterial(): ShaderMaterial {
       uRimColor: { value: RIM_COLOR.clone() },
       // |dot(n, v)| on the shell where the body's silhouette sits (orthographic approximation).
       uEdge: { value: Math.sqrt(1 - 1 / (ATMOSPHERE_SCALE * ATMOSPHERE_SCALE)) },
-      uIntensity: { value: 0.32 },
+      uIntensity: { value: ATMOSPHERE_INTENSITY },
     },
     side: BackSide,
     blending: AdditiveBlending,
