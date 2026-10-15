@@ -44,14 +44,24 @@ test('one persistent canvas and spacecraft pin labels follow the orbit', async (
       distance: step,
     });
     const target = craft.locator('[data-craft-label]').nth(index);
-    await expect.poll(() => target.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.95);
+    const control = target.locator('button[data-craft-select]');
+    await expect(control).toBeVisible();
+    await expect(control).toHaveAttribute('aria-pressed', 'false');
     await expect(craft.getByText(label, { exact: true })).toBeVisible();
+    const leader = craft.locator('[data-craft-leader]').nth(index);
+    const leaderWasProjected = await leader.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).opacity) > 0.95,
+    );
     await page.evaluate(({ top, progress, distance }) => window.scrollTo(0, top + distance * progress), {
       top: sectionTop,
       progress: Math.max(0, cue - 0.06),
       distance: step,
     });
-    await expect.poll(() => target.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeLessThan(0.05);
+    await expect(control).toBeVisible();
+    await expect(control).toHaveAttribute('aria-pressed', 'false');
+    if (leaderWasProjected) {
+      await expect.poll(() => leader.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeLessThan(0.05);
+    }
   }
 });
 

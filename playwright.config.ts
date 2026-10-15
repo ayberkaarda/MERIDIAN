@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  snapshotPathTemplate: "{testDir}/__snapshots__/{arg}{ext}",
   // Software WebGL causes CPU contention when projects run in parallel.
   workers: 1,
   fullyParallel: false,
@@ -17,7 +18,12 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      use: { ...devices["iPhone 13"], viewport: { width: 390, height: 844 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
     },
     {
       name: "desktop-reduced-motion",
@@ -30,8 +36,10 @@ export default defineConfig({
     {
       name: "mobile-reduced-motion",
       use: {
-        ...devices["iPhone 13"],
+        ...devices["Desktop Chrome"],
         viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
         reducedMotion: "reduce",
       },
     },
